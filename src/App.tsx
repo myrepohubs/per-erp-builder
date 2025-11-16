@@ -8,6 +8,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MainLayout } from "./components/MainLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import ClientesPage from "./pages/ClientesPage";
+import OportunidadesPage from "./pages/OportunidadesPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,26 @@ const App = () => (
                 <ProtectedRoute>
                   <MainLayout>
                     <DashboardPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crm/clientes"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ClientesPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crm/oportunidades"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <OportunidadesPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

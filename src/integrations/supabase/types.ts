@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          razon_social: string
+          ruc: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          razon_social: string
+          ruc: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          razon_social?: string
+          ruc?: string
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      oportunidades: {
+        Row: {
+          cliente_asociado: string | null
+          created_at: string
+          empresa_potencial: string
+          estado: Database["public"]["Enums"]["estado_oportunidad"]
+          fecha_cierre_estimada: string | null
+          id: string
+          nombre_contacto: string
+          notas: string | null
+          updated_at: string
+          user_id: string
+          valor_estimado: number | null
+        }
+        Insert: {
+          cliente_asociado?: string | null
+          created_at?: string
+          empresa_potencial: string
+          estado?: Database["public"]["Enums"]["estado_oportunidad"]
+          fecha_cierre_estimada?: string | null
+          id?: string
+          nombre_contacto: string
+          notas?: string | null
+          updated_at?: string
+          user_id: string
+          valor_estimado?: number | null
+        }
+        Update: {
+          cliente_asociado?: string | null
+          created_at?: string
+          empresa_potencial?: string
+          estado?: Database["public"]["Enums"]["estado_oportunidad"]
+          fecha_cierre_estimada?: string | null
+          id?: string
+          nombre_contacto?: string
+          notas?: string | null
+          updated_at?: string
+          user_id?: string
+          valor_estimado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oportunidades_cliente_asociado_fkey"
+            columns: ["cliente_asociado"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           apellidos: string
@@ -55,7 +141,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      estado_oportunidad:
+        | "Nuevo"
+        | "Contactado"
+        | "Propuesta Enviada"
+        | "Negociación"
+        | "Ganado"
+        | "Perdido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -182,6 +274,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      estado_oportunidad: [
+        "Nuevo",
+        "Contactado",
+        "Propuesta Enviada",
+        "Negociación",
+        "Ganado",
+        "Perdido",
+      ],
+    },
   },
 } as const
