@@ -50,6 +50,248 @@ export type Database = {
         }
         Relationships: []
       }
+      cotizaciones: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_documento"]
+          fecha_emision: string
+          fecha_vencimiento: string | null
+          id: string
+          igv: number
+          notas: string | null
+          numero_cotizacion: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_cotizacion: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_cotizacion?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facturas: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_factura"]
+          fecha_emision: string
+          fecha_vencimiento: string | null
+          id: string
+          igv: number
+          monto_pagado: number
+          notas: string | null
+          numero_factura: string
+          pedido_id: string | null
+          serie: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          igv?: number
+          monto_pagado?: number
+          notas?: string | null
+          numero_factura: string
+          pedido_id?: string | null
+          serie?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          fecha_emision?: string
+          fecha_vencimiento?: string | null
+          id?: string
+          igv?: number
+          monto_pagado?: number
+          notas?: string | null
+          numero_factura?: string
+          pedido_id?: string | null
+          serie?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items_cotizacion: {
+        Row: {
+          cantidad: number
+          cotizacion_id: string
+          created_at: string
+          descripcion: string
+          id: string
+          precio_unitario: number
+          subtotal: number
+        }
+        Insert: {
+          cantidad?: number
+          cotizacion_id: string
+          created_at?: string
+          descripcion: string
+          id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Update: {
+          cantidad?: number
+          cotizacion_id?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_cotizacion_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items_factura: {
+        Row: {
+          cantidad: number
+          created_at: string
+          descripcion: string
+          factura_id: string
+          id: string
+          precio_unitario: number
+          subtotal: number
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          descripcion: string
+          factura_id: string
+          id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          descripcion?: string
+          factura_id?: string
+          id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_factura_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items_pedido: {
+        Row: {
+          cantidad: number
+          created_at: string
+          descripcion: string
+          id: string
+          pedido_id: string
+          precio_unitario: number
+          subtotal: number
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          descripcion: string
+          id?: string
+          pedido_id: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          pedido_id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_pedido_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       oportunidades: {
         Row: {
           cliente_asociado: string | null
@@ -100,6 +342,72 @@ export type Database = {
           },
         ]
       }
+      pedidos: {
+        Row: {
+          cliente_id: string | null
+          cotizacion_id: string | null
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_estimada: string | null
+          fecha_pedido: string
+          id: string
+          igv: number
+          notas: string | null
+          numero_pedido: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          cotizacion_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_estimada?: string | null
+          fecha_pedido?: string
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_pedido: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          cotizacion_id?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_estimada?: string | null
+          fecha_pedido?: string
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_pedido?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           apellidos: string
@@ -141,6 +449,18 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      estado_documento:
+        | "Borrador"
+        | "Enviado"
+        | "Aprobado"
+        | "Rechazado"
+        | "Cancelado"
+      estado_factura:
+        | "Borrador"
+        | "Emitida"
+        | "Pagada"
+        | "Vencida"
+        | "Cancelada"
       estado_oportunidad:
         | "Nuevo"
         | "Contactado"
@@ -275,6 +595,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      estado_documento: [
+        "Borrador",
+        "Enviado",
+        "Aprobado",
+        "Rechazado",
+        "Cancelado",
+      ],
+      estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
       estado_oportunidad: [
         "Nuevo",
         "Contactado",
