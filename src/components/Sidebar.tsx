@@ -8,7 +8,9 @@ import {
   BarChart3,
   LogOut,
   Building2,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  Receipt
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +20,9 @@ const menuItems = [
   { to: "/dashboard", icon: Home, label: "Dashboard" },
   { to: "/crm/clientes", icon: Users, label: "Clientes", group: "CRM" },
   { to: "/crm/oportunidades", icon: TrendingUp, label: "Oportunidades", group: "CRM" },
-  { to: "/ventas", icon: ShoppingCart, label: "Ventas" },
+  { to: "/ventas/cotizaciones", icon: FileText, label: "Cotizaciones", group: "Ventas" },
+  { to: "/ventas/pedidos", icon: ShoppingCart, label: "Pedidos", group: "Ventas" },
+  { to: "/ventas/facturas", icon: Receipt, label: "Facturas", group: "Ventas" },
   { to: "/compras", icon: ClipboardList, label: "Compras" },
   { to: "/inventario", icon: Package, label: "Inventario" },
   { to: "/rrhh", icon: UserCircle, label: "RRHH" },

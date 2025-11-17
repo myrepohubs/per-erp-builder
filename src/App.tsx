@@ -10,6 +10,9 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ClientesPage from "./pages/ClientesPage";
 import OportunidadesPage from "./pages/OportunidadesPage";
+import CotizacionesPage from "./pages/CotizacionesPage";
+import PedidosPage from "./pages/PedidosPage";
+import FacturasPage from "./pages/FacturasPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 
@@ -72,13 +75,43 @@ const App = () => (
               }
             />
             <Route
+              path="/ventas/cotizaciones"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CotizacionesPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ventas/pedidos"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <PedidosPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ventas/facturas"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <FacturasPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/ventas"
               element={
                 <ProtectedRoute>
                   <MainLayout>
                     <PlaceholderPage 
                       title="Ventas" 
-                      description="Facturación y Cuentas por Cobrar"
+                      description="Gestión de Ventas y Facturación"
                     />
                   </MainLayout>
                 </ProtectedRoute>
