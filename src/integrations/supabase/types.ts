@@ -254,6 +254,44 @@ export type Database = {
           },
         ]
       }
+      items_orden_compra: {
+        Row: {
+          cantidad: number
+          created_at: string
+          descripcion: string
+          id: string
+          orden_compra_id: string
+          precio_unitario: number
+          subtotal: number
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          descripcion: string
+          id?: string
+          orden_compra_id: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          descripcion?: string
+          id?: string
+          orden_compra_id?: string
+          precio_unitario?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_orden_compra_orden_compra_id_fkey"
+            columns: ["orden_compra_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_compra"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items_pedido: {
         Row: {
           cantidad: number
@@ -338,6 +376,62 @@ export type Database = {
             columns: ["cliente_asociado"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordenes_compra: {
+        Row: {
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_esperada: string | null
+          fecha_orden: string
+          id: string
+          igv: number
+          notas: string | null
+          numero_orden: string
+          proveedor_id: string | null
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_esperada?: string | null
+          fecha_orden?: string
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_orden: string
+          proveedor_id?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          fecha_entrega_esperada?: string | null
+          fecha_orden?: string
+          id?: string
+          igv?: number
+          notas?: string | null
+          numero_orden?: string
+          proveedor_id?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordenes_compra_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
         ]
@@ -437,6 +531,45 @@ export type Database = {
           nombres?: string
           rol?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      proveedores: {
+        Row: {
+          contacto: string | null
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          razon_social: string
+          ruc: string
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          razon_social: string
+          ruc: string
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          razon_social?: string
+          ruc?: string
+          telefono?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
