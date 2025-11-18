@@ -15,6 +15,8 @@ import PedidosPage from "./pages/PedidosPage";
 import FacturasPage from "./pages/FacturasPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
+import ProveedoresPage from "./pages/ProveedoresPage";
+import OrdenesCompraPage from "./pages/OrdenesCompraPage";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +115,26 @@ const App = () => (
                       title="Ventas" 
                       description="Gestión de Ventas y Facturación"
                     />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/compras/proveedores"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ProveedoresPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/compras/ordenes"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <OrdenesCompraPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
