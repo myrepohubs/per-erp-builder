@@ -25,7 +25,7 @@ const menuItems = [
   { to: "/ventas/facturas", icon: Receipt, label: "Facturas", group: "Ventas" },
   { to: "/compras/proveedores", icon: Building2, label: "Proveedores", group: "Compras" },
   { to: "/compras/ordenes", icon: ClipboardList, label: "Órdenes de Compra", group: "Compras" },
-  { to: "/inventario", icon: Package, label: "Inventario" },
+  { to: "/inventario", icon: Package, label: "Inventario", group: "Inventario" },
   { to: "/rrhh", icon: UserCircle, label: "RRHH" },
   { to: "/finanzas", icon: BarChart3, label: "Finanzas" },
 ];
