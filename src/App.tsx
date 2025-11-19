@@ -17,6 +17,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import ProveedoresPage from "./pages/ProveedoresPage";
 import OrdenesCompraPage from "./pages/OrdenesCompraPage";
+import InventarioPage from "./pages/InventarioPage";
 
 const queryClient = new QueryClient();
 
@@ -157,10 +158,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MainLayout>
-                    <PlaceholderPage 
-                      title="Inventario" 
-                      description="Control y Gestión de Stock"
-                    />
+                    <InventarioPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

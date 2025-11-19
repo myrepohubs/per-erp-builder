@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      categorias: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           created_at: string
@@ -330,6 +357,53 @@ export type Database = {
           },
         ]
       }
+      movimientos_inventario: {
+        Row: {
+          cantidad: number
+          created_at: string
+          id: string
+          notas: string | null
+          producto_id: string
+          referencia: string | null
+          stock_anterior: number
+          stock_nuevo: number
+          tipo: Database["public"]["Enums"]["tipo_movimiento"]
+          user_id: string
+        }
+        Insert: {
+          cantidad: number
+          created_at?: string
+          id?: string
+          notas?: string | null
+          producto_id: string
+          referencia?: string | null
+          stock_anterior: number
+          stock_nuevo: number
+          tipo: Database["public"]["Enums"]["tipo_movimiento"]
+          user_id: string
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          notas?: string | null
+          producto_id?: string
+          referencia?: string | null
+          stock_anterior?: number
+          stock_nuevo?: number
+          tipo?: Database["public"]["Enums"]["tipo_movimiento"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimientos_inventario_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       oportunidades: {
         Row: {
           cliente_asociado: string | null
@@ -502,6 +576,71 @@ export type Database = {
           },
         ]
       }
+      productos: {
+        Row: {
+          activo: boolean | null
+          categoria_id: string | null
+          codigo_barras: string | null
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          precio_compra: number | null
+          precio_venta: number | null
+          sku: string
+          stock_actual: number | null
+          stock_maximo: number | null
+          stock_minimo: number | null
+          unidad_medida: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activo?: boolean | null
+          categoria_id?: string | null
+          codigo_barras?: string | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          precio_compra?: number | null
+          precio_venta?: number | null
+          sku: string
+          stock_actual?: number | null
+          stock_maximo?: number | null
+          stock_minimo?: number | null
+          unidad_medida?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activo?: boolean | null
+          categoria_id?: string | null
+          codigo_barras?: string | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          precio_compra?: number | null
+          precio_venta?: number | null
+          sku?: string
+          stock_actual?: number | null
+          stock_maximo?: number | null
+          stock_minimo?: number | null
+          unidad_medida?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "productos_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           apellidos: string
@@ -601,6 +740,7 @@ export type Database = {
         | "Negociación"
         | "Ganado"
         | "Perdido"
+      tipo_movimiento: "Entrada" | "Salida" | "Ajuste"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -744,6 +884,7 @@ export const Constants = {
         "Ganado",
         "Perdido",
       ],
+      tipo_movimiento: ["Entrada", "Salida", "Ajuste"],
     },
   },
 } as const
