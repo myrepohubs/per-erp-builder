@@ -26,7 +26,10 @@ const menuItems = [
   { to: "/compras/proveedores", icon: Building2, label: "Proveedores", group: "Compras" },
   { to: "/compras/ordenes", icon: ClipboardList, label: "Órdenes de Compra", group: "Compras" },
   { to: "/inventario", icon: Package, label: "Inventario", group: "Inventario" },
-  { to: "/rrhh", icon: UserCircle, label: "RRHH" },
+  { to: "/rrhh/departamentos", icon: Building2, label: "Departamentos", group: "RRHH" },
+  { to: "/rrhh/empleados", icon: Users, label: "Empleados", group: "RRHH" },
+  { to: "/rrhh/asistencias", icon: ClipboardList, label: "Asistencias", group: "RRHH" },
+  { to: "/rrhh/vacaciones", icon: UserCircle, label: "Vacaciones", group: "RRHH" },
   { to: "/finanzas", icon: BarChart3, label: "Finanzas" },
 ];
 
