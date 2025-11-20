@@ -18,6 +18,10 @@ import NotFound from "./pages/NotFound";
 import ProveedoresPage from "./pages/ProveedoresPage";
 import OrdenesCompraPage from "./pages/OrdenesCompraPage";
 import InventarioPage from "./pages/InventarioPage";
+import DepartamentosPage from "./pages/rrhh/DepartamentosPage";
+import EmpleadosPage from "./pages/rrhh/EmpleadosPage";
+import AsistenciasPage from "./pages/rrhh/AsistenciasPage";
+import VacacionesPage from "./pages/rrhh/VacacionesPage";
 
 const queryClient = new QueryClient();
 
@@ -164,14 +168,41 @@ const App = () => (
               }
             />
             <Route
-              path="/rrhh"
+              path="/rrhh/departamentos"
               element={
                 <ProtectedRoute>
                   <MainLayout>
-                    <PlaceholderPage 
-                      title="RRHH" 
-                      description="Gestión de Recursos Humanos"
-                    />
+                    <DepartamentosPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rrhh/empleados"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EmpleadosPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rrhh/asistencias"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <AsistenciasPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rrhh/vacaciones"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <VacacionesPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
