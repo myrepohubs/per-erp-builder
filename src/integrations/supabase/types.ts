@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      asistencias: {
+        Row: {
+          created_at: string
+          empleado_id: string
+          fecha: string
+          hora_entrada: string | null
+          hora_salida: string | null
+          id: string
+          notas: string | null
+          tipo: Database["public"]["Enums"]["tipo_asistencia"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          empleado_id: string
+          fecha?: string
+          hora_entrada?: string | null
+          hora_salida?: string | null
+          id?: string
+          notas?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_asistencia"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          empleado_id?: string
+          fecha?: string
+          hora_entrada?: string | null
+          hora_salida?: string | null
+          id?: string
+          notas?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_asistencia"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asistencias_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias: {
         Row: {
           created_at: string
@@ -129,6 +173,98 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departamentos: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      empleados: {
+        Row: {
+          activo: boolean | null
+          apellidos: string
+          cargo: string
+          created_at: string
+          departamento_id: string | null
+          direccion: string | null
+          dni: string
+          email: string | null
+          fecha_ingreso: string
+          fecha_nacimiento: string | null
+          id: string
+          nombres: string
+          salario: number | null
+          telefono: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activo?: boolean | null
+          apellidos: string
+          cargo: string
+          created_at?: string
+          departamento_id?: string | null
+          direccion?: string | null
+          dni: string
+          email?: string | null
+          fecha_ingreso?: string
+          fecha_nacimiento?: string | null
+          id?: string
+          nombres: string
+          salario?: number | null
+          telefono?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activo?: boolean | null
+          apellidos?: string
+          cargo?: string
+          created_at?: string
+          departamento_id?: string | null
+          direccion?: string | null
+          dni?: string
+          email?: string | null
+          fecha_ingreso?: string
+          fecha_nacimiento?: string | null
+          id?: string
+          nombres?: string
+          salario?: number | null
+          telefono?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_departamento_id_fkey"
+            columns: ["departamento_id"]
+            isOneToOne: false
+            referencedRelation: "departamentos"
             referencedColumns: ["id"]
           },
         ]
@@ -713,6 +849,53 @@ export type Database = {
         }
         Relationships: []
       }
+      vacaciones: {
+        Row: {
+          created_at: string
+          dias_totales: number
+          empleado_id: string
+          estado: Database["public"]["Enums"]["estado_vacacion"]
+          fecha_fin: string
+          fecha_inicio: string
+          id: string
+          motivo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dias_totales: number
+          empleado_id: string
+          estado?: Database["public"]["Enums"]["estado_vacacion"]
+          fecha_fin: string
+          fecha_inicio: string
+          id?: string
+          motivo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dias_totales?: number
+          empleado_id?: string
+          estado?: Database["public"]["Enums"]["estado_vacacion"]
+          fecha_fin?: string
+          fecha_inicio?: string
+          id?: string
+          motivo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -740,6 +923,8 @@ export type Database = {
         | "Negociación"
         | "Ganado"
         | "Perdido"
+      estado_vacacion: "Pendiente" | "Aprobado" | "Rechazado"
+      tipo_asistencia: "Presente" | "Ausente" | "Tardanza" | "Permiso"
       tipo_movimiento: "Entrada" | "Salida" | "Ajuste"
     }
     CompositeTypes: {
@@ -884,6 +1069,8 @@ export const Constants = {
         "Ganado",
         "Perdido",
       ],
+      estado_vacacion: ["Pendiente", "Aprobado", "Rechazado"],
+      tipo_asistencia: ["Presente", "Ausente", "Tardanza", "Permiso"],
       tipo_movimiento: ["Entrada", "Salida", "Ajuste"],
     },
   },
