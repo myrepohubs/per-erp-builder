@@ -16,6 +16,7 @@ import FacturasPage from "./pages/FacturasPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import ProveedoresPage from "./pages/ProveedoresPage";
+import FinanzasPage from "./pages/FinanzasPage";
 import OrdenesCompraPage from "./pages/OrdenesCompraPage";
 import InventarioPage from "./pages/InventarioPage";
 import DepartamentosPage from "./pages/rrhh/DepartamentosPage";
@@ -212,10 +213,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MainLayout>
-                    <PlaceholderPage 
-                      title="Finanzas" 
-                      description="Reportes y Análisis Contable"
-                    />
+                    <FinanzasPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
