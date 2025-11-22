@@ -10,7 +10,9 @@ import {
   Building2,
   TrendingUp,
   FileText,
-  Receipt
+  Receipt,
+  BookOpen,
+  DollarSign
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +32,11 @@ const menuItems = [
   { to: "/rrhh/empleados", icon: Users, label: "Empleados", group: "RRHH" },
   { to: "/rrhh/asistencias", icon: ClipboardList, label: "Asistencias", group: "RRHH" },
   { to: "/rrhh/vacaciones", icon: UserCircle, label: "Vacaciones", group: "RRHH" },
-  { to: "/finanzas", icon: BarChart3, label: "Finanzas" },
+  { to: "/contabilidad/cuentas", icon: DollarSign, label: "Plan de Cuentas", group: "Contabilidad" },
+  { to: "/contabilidad/asientos", icon: FileText, label: "Asientos Contables", group: "Contabilidad" },
+  { to: "/contabilidad/libro-diario", icon: BookOpen, label: "Libro Diario", group: "Contabilidad" },
+  { to: "/contabilidad/libro-mayor", icon: BookOpen, label: "Libro Mayor", group: "Contabilidad" },
+  { to: "/finanzas", icon: BarChart3, label: "Reportes Financieros", group: "Contabilidad" },
 ];
 
 export function Sidebar() {

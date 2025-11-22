@@ -23,6 +23,10 @@ import DepartamentosPage from "./pages/rrhh/DepartamentosPage";
 import EmpleadosPage from "./pages/rrhh/EmpleadosPage";
 import AsistenciasPage from "./pages/rrhh/AsistenciasPage";
 import VacacionesPage from "./pages/rrhh/VacacionesPage";
+import CuentasContablesPage from "./pages/contabilidad/CuentasContablesPage";
+import AsientosContablesPage from "./pages/contabilidad/AsientosContablesPage";
+import LibroDiarioPage from "./pages/contabilidad/LibroDiarioPage";
+import LibroMayorPage from "./pages/contabilidad/LibroMayorPage";
 
 const queryClient = new QueryClient();
 
@@ -214,6 +218,46 @@ const App = () => (
                 <ProtectedRoute>
                   <MainLayout>
                     <FinanzasPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contabilidad/cuentas"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <CuentasContablesPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contabilidad/asientos"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <AsientosContablesPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contabilidad/libro-diario"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <LibroDiarioPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contabilidad/libro-mayor"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <LibroMayorPage />
                   </MainLayout>
                 </ProtectedRoute>
               }

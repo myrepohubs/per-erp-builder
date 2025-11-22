@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      asientos_contables: {
+        Row: {
+          created_at: string
+          estado: string
+          fecha: string
+          glosa: string
+          id: string
+          numero_asiento: string
+          referencia: string | null
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estado?: string
+          fecha?: string
+          glosa: string
+          id?: string
+          numero_asiento: string
+          referencia?: string | null
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estado?: string
+          fecha?: string
+          glosa?: string
+          id?: string
+          numero_asiento?: string
+          referencia?: string | null
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       asistencias: {
         Row: {
           created_at: string
@@ -177,6 +216,56 @@ export type Database = {
           },
         ]
       }
+      cuentas_contables: {
+        Row: {
+          activa: boolean | null
+          codigo: string
+          created_at: string
+          cuenta_padre_id: string | null
+          descripcion: string | null
+          id: string
+          nivel: number
+          nombre: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activa?: boolean | null
+          codigo: string
+          created_at?: string
+          cuenta_padre_id?: string | null
+          descripcion?: string | null
+          id?: string
+          nivel?: number
+          nombre: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activa?: boolean | null
+          codigo?: string
+          created_at?: string
+          cuenta_padre_id?: string | null
+          descripcion?: string | null
+          id?: string
+          nivel?: number
+          nombre?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cuentas_contables_cuenta_padre_id_fkey"
+            columns: ["cuenta_padre_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_contables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departamentos: {
         Row: {
           created_at: string
@@ -203,6 +292,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      detalles_asiento: {
+        Row: {
+          asiento_id: string
+          created_at: string
+          cuenta_id: string
+          debe: number
+          glosa: string | null
+          haber: number
+          id: string
+        }
+        Insert: {
+          asiento_id: string
+          created_at?: string
+          cuenta_id: string
+          debe?: number
+          glosa?: string | null
+          haber?: number
+          id?: string
+        }
+        Update: {
+          asiento_id?: string
+          created_at?: string
+          cuenta_id?: string
+          debe?: number
+          glosa?: string | null
+          haber?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detalles_asiento_asiento_id_fkey"
+            columns: ["asiento_id"]
+            isOneToOne: false
+            referencedRelation: "asientos_contables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detalles_asiento_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas_contables"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       empleados: {
         Row: {
