@@ -19,8 +19,16 @@ interface Cliente {
   ruc: string;
 }
 
+interface Producto {
+  id: string;
+  nombre: string;
+  sku: string;
+  precio_venta: number | null;
+}
+
 interface ItemFactura {
   id?: string;
+  producto_id: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
@@ -47,9 +55,10 @@ export default function FacturasPage() {
   const { user } = useAuth();
   const [facturas, setFacturas] = useState<Factura[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [items, setItems] = useState<ItemFactura[]>([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+  const [items, setItems] = useState<ItemFactura[]>([{ producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
   
   const [formData, setFormData] = useState({
     numero_factura: "",
@@ -66,6 +75,7 @@ export default function FacturasPage() {
     if (user) {
       fetchFacturas();
       fetchClientes();
+      fetchProductos();
     }
   }, [user]);
 
@@ -97,11 +107,42 @@ export default function FacturasPage() {
     setClientes(data || []);
   };
 
+  const fetchProductos = async () => {
+    const { data, error } = await supabase
+      .from("productos")
+      .select("id, nombre, sku, precio_venta")
+      .eq("activo", true)
+      .order("nombre");
+
+    if (error) {
+      toast.error("Error al cargar productos");
+      return;
+    }
+
+    setProductos(data || []);
+  };
+
   const calculateTotals = (currentItems: ItemFactura[]) => {
     const subtotal = currentItems.reduce((sum, item) => sum + item.subtotal, 0);
     const igv = subtotal * 0.18;
     const total = subtotal + igv;
     return { subtotal, igv, total };
+  };
+
+  const handleProductSelect = (index: number, productoId: string) => {
+    const producto = productos.find(p => p.id === productoId);
+    if (producto) {
+      const newItems = [...items];
+      const precio = producto.precio_venta || 0;
+      newItems[index] = {
+        ...newItems[index],
+        producto_id: productoId,
+        descripcion: producto.nombre,
+        precio_unitario: precio,
+        subtotal: newItems[index].cantidad * precio,
+      };
+      setItems(newItems);
+    }
   };
 
   const handleItemChange = (index: number, field: keyof ItemFactura, value: string | number) => {
@@ -119,7 +160,7 @@ export default function FacturasPage() {
   };
 
   const addItem = () => {
-    setItems([...items, { descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+    setItems([...items, { producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -243,7 +284,7 @@ export default function FacturasPage() {
       monto_pagado: 0,
       notas: "",
     });
-    setItems([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+    setItems([{ producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
     setEditingId(null);
   };
 
@@ -266,13 +307,17 @@ export default function FacturasPage() {
       .eq("factura_id", factura.id);
 
     if (itemsData && itemsData.length > 0) {
-      setItems(itemsData.map(item => ({
-        id: item.id,
-        descripcion: item.descripcion,
-        cantidad: typeof item.cantidad === 'string' ? parseFloat(item.cantidad) : item.cantidad,
-        precio_unitario: typeof item.precio_unitario === 'string' ? parseFloat(item.precio_unitario) : item.precio_unitario,
-        subtotal: typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal,
-      })));
+      setItems(itemsData.map(item => {
+        const producto = productos.find(p => p.nombre === item.descripcion);
+        return {
+          id: item.id,
+          producto_id: producto?.id || "",
+          descripcion: item.descripcion,
+          cantidad: typeof item.cantidad === 'string' ? parseFloat(item.cantidad) : item.cantidad,
+          precio_unitario: typeof item.precio_unitario === 'string' ? parseFloat(item.precio_unitario) : item.precio_unitario,
+          subtotal: typeof item.subtotal === 'string' ? parseFloat(item.subtotal) : item.subtotal,
+        };
+      }));
     }
 
     setIsOpen(true);
@@ -397,11 +442,21 @@ export default function FacturasPage() {
                   {items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-5">
-                        <Input
-                          placeholder="Descripción"
-                          value={item.descripcion}
-                          onChange={(e) => handleItemChange(index, "descripcion", e.target.value)}
-                        />
+                        <Select 
+                          value={item.producto_id} 
+                          onValueChange={(value) => handleProductSelect(index, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un producto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {productos.map((producto) => (
+                              <SelectItem key={producto.id} value={producto.id}>
+                                {producto.nombre} - {producto.sku}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="col-span-2">
                         <Input
