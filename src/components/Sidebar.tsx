@@ -12,7 +12,8 @@ import {
   FileText,
   Receipt,
   BookOpen,
-  DollarSign
+  DollarSign,
+  Store
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { to: "/dashboard", icon: Home, label: "Dashboard" },
+  { to: "/pos", icon: Store, label: "Punto de Venta" },
   { to: "/crm/clientes", icon: Users, label: "Clientes", group: "CRM" },
   { to: "/crm/oportunidades", icon: TrendingUp, label: "Oportunidades", group: "CRM" },
   { to: "/ventas/cotizaciones", icon: FileText, label: "Cotizaciones", group: "Ventas" },
