@@ -482,12 +482,12 @@ const PuntoVentaPage = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Cliente (opcional)</label>
-              <Select value={clienteSeleccionado} onValueChange={setClienteSeleccionado}>
+              <Select value={clienteSeleccionado || "none"} onValueChange={(value) => setClienteSeleccionado(value === "none" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin cliente</SelectItem>
+                  <SelectItem value="none">Sin cliente</SelectItem>
                   {clientes.map((cliente) => (
                     <SelectItem key={cliente.id} value={cliente.id}>
                       {cliente.razon_social} - {cliente.ruc}
