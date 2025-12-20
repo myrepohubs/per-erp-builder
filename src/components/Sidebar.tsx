@@ -13,10 +13,12 @@ import {
   Receipt,
   BookOpen,
   DollarSign,
-  Store
+  Store,
+  Shield
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 
 const menuItems = [
@@ -43,6 +45,12 @@ const menuItems = [
 
 export function Sidebar() {
   const { signOut } = useAuth();
+  const { isAdmin } = useUserRole();
+
+  const allMenuItems = [
+    ...menuItems,
+    ...(isAdmin ? [{ to: "/usuarios", icon: Shield, label: "Gestión de Usuarios", group: "Administración" }] : []),
+  ];
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground shadow-lg">
@@ -58,8 +66,8 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {menuItems.map((item, index) => {
-            const showGroupHeader = item.group && (!menuItems[index - 1] || menuItems[index - 1].group !== item.group);
+          {allMenuItems.map((item, index) => {
+            const showGroupHeader = item.group && (!allMenuItems[index - 1] || allMenuItems[index - 1].group !== item.group);
             
             return (
               <div key={item.to}>

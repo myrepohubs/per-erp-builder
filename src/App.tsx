@@ -28,6 +28,7 @@ import AsientosContablesPage from "./pages/contabilidad/AsientosContablesPage";
 import LibroDiarioPage from "./pages/contabilidad/LibroDiarioPage";
 import LibroMayorPage from "./pages/contabilidad/LibroMayorPage";
 import PuntoVentaPage from "./pages/PuntoVentaPage";
+import UsuariosPage from "./pages/UsuariosPage";
 
 const queryClient = new QueryClient();
 
@@ -269,6 +270,16 @@ const App = () => (
                 <ProtectedRoute>
                   <MainLayout>
                     <PuntoVentaPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <UsuariosPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
