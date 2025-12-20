@@ -22,13 +22,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isInitialLoad = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (event === 'SIGNED_IN') {
+        // Solo redirigir en login/logout real, no en token refresh o carga inicial
+        if (event === 'SIGNED_IN' && !isInitialLoad) {
           navigate('/dashboard');
         }
         
@@ -43,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      isInitialLoad = false;
     });
 
     return () => subscription.unsubscribe();
