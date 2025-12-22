@@ -22,19 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isInitialLoad = true;
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Solo redirigir en login/logout real, no en token refresh o carga inicial
-        if (event === 'SIGNED_IN' && !isInitialLoad) {
-          navigate('/dashboard');
-        }
-        
+        // Solo redirigir en logout real, no en token refresh o cambio de pestaña
         if (event === 'SIGNED_OUT') {
           navigate('/login');
         }
@@ -46,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      isInitialLoad = false;
     });
 
     return () => subscription.unsubscribe();
@@ -62,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       toast.success("Inicio de sesión exitoso");
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || "Error al iniciar sesión");
       throw error;
