@@ -32,6 +32,15 @@ CREATE POLICY "Los usuarios pueden eliminar sus propios proveedores"
 ON public.proveedores FOR DELETE
 USING (auth.uid() = user_id);
 
+-- Crear enum para estados de documentos
+CREATE TYPE public.estado_documento AS ENUM (
+  'Borrador',
+  'Aprobado',
+  'Enviado',
+  'Recibido',
+  'Cancelado'
+);
+
 -- Crear tabla de órdenes de compra
 CREATE TABLE public.ordenes_compra (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
