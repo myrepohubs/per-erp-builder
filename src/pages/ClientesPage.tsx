@@ -77,6 +77,18 @@ export default function ClientesPage() {
       return;
     }
 
+    // Verificar si el RUC ya existe (excluyendo el cliente actual en edición)
+    const { data: existingClient } = await supabase
+      .from("clientes")
+      .select("id")
+      .eq("ruc", formData.ruc)
+      .maybeSingle();
+
+    if (existingClient && existingClient.id !== editingCliente?.id) {
+      toast.error("Ya existe un cliente con este RUC");
+      return;
+    }
+
     try {
       if (editingCliente) {
         const { error } = await supabase
