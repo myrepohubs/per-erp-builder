@@ -2,8 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Lovable Cloud Supabase configuration
+const SUPABASE_URL = "https://cgmskoamijgrehchlikg.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbXNrb2FtaWpncmVoY2hsaWtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyOTQxMTMsImV4cCI6MjA3ODg3MDExM30.KYcyT-lsK3pgmT-4ZaCCSTSizpwJcsIa11xUi-qhCyA";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
