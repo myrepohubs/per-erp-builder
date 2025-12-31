@@ -19,8 +19,16 @@ interface Cliente {
   ruc: string;
 }
 
+interface Producto {
+  id: string;
+  nombre: string;
+  sku: string;
+  precio_venta: number | null;
+}
+
 interface ItemCotizacion {
   id?: string;
+  producto_id?: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
@@ -45,6 +53,7 @@ export default function CotizacionesPage() {
   const { user } = useAuth();
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [items, setItems] = useState<ItemCotizacion[]>([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
@@ -62,6 +71,7 @@ export default function CotizacionesPage() {
     if (user) {
       fetchCotizaciones();
       fetchClientes();
+      fetchProductos();
     }
   }, [user]);
 
@@ -93,6 +103,36 @@ export default function CotizacionesPage() {
     setClientes(data || []);
   };
 
+  const fetchProductos = async () => {
+    const { data, error } = await supabase
+      .from("productos")
+      .select("id, nombre, sku, precio_venta")
+      .eq("activo", true)
+      .order("nombre");
+
+    if (error) {
+      toast.error("Error al cargar productos");
+      return;
+    }
+
+    setProductos(data || []);
+  };
+
+  const handleProductSelect = (index: number, productoId: string) => {
+    const producto = productos.find(p => p.id === productoId);
+    if (producto) {
+      const newItems = [...items];
+      newItems[index] = {
+        ...newItems[index],
+        producto_id: producto.id,
+        descripcion: `${producto.nombre} - ${producto.sku}`,
+        precio_unitario: producto.precio_venta || 0,
+        subtotal: newItems[index].cantidad * (producto.precio_venta || 0),
+      };
+      setItems(newItems);
+    }
+  };
+
   const calculateTotals = (currentItems: ItemCotizacion[]) => {
     const subtotal = currentItems.reduce((sum, item) => sum + item.subtotal, 0);
     const igv = subtotal * 0.18;
@@ -115,7 +155,7 @@ export default function CotizacionesPage() {
   };
 
   const addItem = () => {
-    setItems([...items, { descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+    setItems([...items, { producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -235,7 +275,7 @@ export default function CotizacionesPage() {
       estado: "Borrador",
       notas: "",
     });
-    setItems([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+    setItems([{ producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
     setEditingId(null);
   };
 
@@ -368,11 +408,21 @@ export default function CotizacionesPage() {
                   {items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-5">
-                        <Input
-                          placeholder="Descripción"
-                          value={item.descripcion}
-                          onChange={(e) => handleItemChange(index, "descripcion", e.target.value)}
-                        />
+                        <Select
+                          value={item.producto_id || ""}
+                          onValueChange={(value) => handleProductSelect(index, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un producto" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {productos.map((producto) => (
+                              <SelectItem key={producto.id} value={producto.id}>
+                                {producto.nombre} - {producto.sku}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="col-span-2">
                         <Input
