@@ -29,10 +29,19 @@ interface OrdenCompra {
 
 interface ItemOrden {
   id?: string;
+  producto_id?: string;
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
   subtotal: number;
+}
+
+interface Producto {
+  id: string;
+  nombre: string;
+  precio_compra: number | null;
+  precio_venta: number | null;
+  stock_actual: number | null;
 }
 
 const IGV_RATE = 0.18;
@@ -52,6 +61,7 @@ export default function OrdenesCompraPage() {
   });
   const [items, setItems] = useState<ItemOrden[]>([]);
   const [newItem, setNewItem] = useState({
+    producto_id: "",
     descripcion: "",
     cantidad: 1,
     precio_unitario: 0,
@@ -66,6 +76,20 @@ export default function OrdenesCompraPage() {
         .eq("user_id", user?.id || "");
       if (error) throw error;
       return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: productos = [] } = useQuery({
+    queryKey: ["productos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("productos")
+        .select("id, nombre, precio_compra, precio_venta, stock_actual")
+        .eq("user_id", user?.id || "")
+        .eq("activo", true);
+      if (error) throw error;
+      return data as Producto[];
     },
     enabled: !!user,
   });
@@ -91,14 +115,26 @@ export default function OrdenesCompraPage() {
     return { subtotal, igv, total };
   };
 
+  const handleProductSelect = (productoId: string) => {
+    const producto = productos.find((p) => p.id === productoId);
+    if (producto) {
+      setNewItem({
+        producto_id: productoId,
+        descripcion: producto.nombre,
+        cantidad: 1,
+        precio_unitario: producto.precio_compra || 0,
+      });
+    }
+  };
+
   const addItem = () => {
     if (!newItem.descripcion) {
-      toast.error("La descripción es requerida");
+      toast.error("Selecciona un producto");
       return;
     }
     const subtotal = newItem.cantidad * newItem.precio_unitario;
     setItems([...items, { ...newItem, subtotal }]);
-    setNewItem({ descripcion: "", cantidad: 1, precio_unitario: 0 });
+    setNewItem({ producto_id: "", descripcion: "", cantidad: 1, precio_unitario: 0 });
   };
 
   const removeItem = (index: number) => {
@@ -362,12 +398,18 @@ export default function OrdenesCompraPage() {
                   <Label>Items de la Orden</Label>
                   <div className="border rounded-lg p-4 space-y-3">
                     <div className="grid grid-cols-12 gap-2">
-                      <Input
-                        placeholder="Descripción"
-                        className="col-span-5"
-                        value={newItem.descripcion}
-                        onChange={(e) => setNewItem({ ...newItem, descripcion: e.target.value })}
-                      />
+                      <Select value={newItem.producto_id} onValueChange={handleProductSelect}>
+                        <SelectTrigger className="col-span-5">
+                          <SelectValue placeholder="Seleccionar producto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {productos.map((producto) => (
+                            <SelectItem key={producto.id} value={producto.id}>
+                              {producto.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
                         type="number"
                         placeholder="Cant."
