@@ -118,8 +118,19 @@ export default function ProveedoresPage() {
     setOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar RUC único
+    const rucExists = proveedores.some(
+      (p) => p.ruc === formData.ruc && p.id !== editingId
+    );
+    
+    if (rucExists) {
+      toast.error("El RUC ya está registrado para otro proveedor");
+      return;
+    }
+    
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: formData });
     } else {
