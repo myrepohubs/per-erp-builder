@@ -158,7 +158,11 @@ export default function InventarioPage() {
       resetProductoForm();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Error al crear producto");
+      if (error.message?.includes("productos_user_id_sku_key") || error.code === "23505") {
+        toast.error("Ya existe un producto con este SKU. Por favor, usa un código diferente.");
+      } else {
+        toast.error(error.message || "Error al crear producto");
+      }
     },
   });
 
@@ -178,7 +182,11 @@ export default function InventarioPage() {
       resetProductoForm();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Error al actualizar producto");
+      if (error.message?.includes("productos_user_id_sku_key") || error.code === "23505") {
+        toast.error("Ya existe un producto con este SKU. Por favor, usa un código diferente.");
+      } else {
+        toast.error(error.message || "Error al actualizar producto");
+      }
     },
   });
 
