@@ -79,6 +79,17 @@ export default function DepartamentosPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar nombre único
+    const nombreExists = departamentos.some(
+      (d) => d.nombre.toLowerCase() === formData.nombre.toLowerCase() && d.id !== editingDept?.id
+    );
+    
+    if (nombreExists) {
+      toast({ title: "Ya existe un departamento con este nombre", variant: "destructive" });
+      return;
+    }
+    
     if (editingDept) {
       updateMutation.mutate({ id: editingDept.id, data: formData });
     } else {
