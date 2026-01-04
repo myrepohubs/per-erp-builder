@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +60,7 @@ export default function InventarioPage() {
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
+  const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
 
   // Producto form state
   const [productoForm, setProductoForm] = useState({
@@ -837,7 +839,7 @@ export default function InventarioPage() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => deleteCategoriaMutation.mutate(cat.id)}
+                              onClick={() => setCategoriaToDelete(cat)}
                               disabled={productosCount > 0}
                               title={productosCount > 0 ? "No se puede eliminar: hay productos asociados" : "Eliminar"}
                             >
@@ -930,6 +932,32 @@ export default function InventarioPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog para confirmar eliminación de categoría */}
+      <AlertDialog open={!!categoriaToDelete} onOpenChange={(open) => !open && setCategoriaToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar categoría?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la categoría "{categoriaToDelete?.nombre}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (categoriaToDelete) {
+                  deleteCategoriaMutation.mutate(categoriaToDelete.id);
+                  setCategoriaToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
