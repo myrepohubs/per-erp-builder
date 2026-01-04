@@ -18,10 +18,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Users, Shield, Search, UserX, UserCheck, Trash2, Loader2 } from "lucide-react";
+import { Users, Shield, Search, UserX, UserCheck, Trash2, Loader2, Plus } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -46,6 +55,24 @@ interface UserWithRole {
   email?: string;
 }
 
+interface NewUserForm {
+  email: string;
+  password: string;
+  nombres: string;
+  apellidos: string;
+  empresa: string;
+  role: AppRole;
+}
+
+const initialNewUserForm: NewUserForm = {
+  email: "",
+  password: "",
+  nombres: "",
+  apellidos: "",
+  empresa: "",
+  role: "user",
+};
+
 export default function UsuariosPage() {
   const { user: currentUser } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
@@ -54,6 +81,9 @@ export default function UsuariosPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newUserForm, setNewUserForm] = useState<NewUserForm>(initialNewUserForm);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (isAdmin) {
@@ -187,6 +217,74 @@ export default function UsuariosPage() {
     }
   }
 
+  async function createUser() {
+    if (!newUserForm.email || !newUserForm.password || !newUserForm.nombres || !newUserForm.apellidos) {
+      toast.error("Por favor complete todos los campos obligatorios");
+      return;
+    }
+
+    if (newUserForm.password.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    try {
+      setCreating(true);
+
+      // Crear usuario en auth usando signUp (el trigger creará el profile y rol automáticamente)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: newUserForm.email,
+        password: newUserForm.password,
+        options: {
+          data: {
+            nombres: newUserForm.nombres,
+            apellidos: newUserForm.apellidos,
+          },
+        },
+      });
+
+      if (authError) {
+        if (authError.message.includes("already registered")) {
+          toast.error("Ya existe un usuario con este correo electrónico");
+        } else {
+          throw authError;
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        toast.error("Error al crear el usuario");
+        return;
+      }
+
+      // Actualizar el profile con la empresa si se proporcionó
+      if (newUserForm.empresa) {
+        await supabase
+          .from("profiles")
+          .update({ empresa: newUserForm.empresa })
+          .eq("user_id", authData.user.id);
+      }
+
+      // Actualizar el rol si no es 'user' (el trigger ya asigna 'user' por defecto)
+      if (newUserForm.role !== "user") {
+        await supabase
+          .from("user_roles")
+          .update({ role: newUserForm.role })
+          .eq("user_id", authData.user.id);
+      }
+
+      toast.success("Usuario creado correctamente");
+      setCreateDialogOpen(false);
+      setNewUserForm(initialNewUserForm);
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      toast.error(error.message || "Error al crear usuario");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   const filteredUsers = users.filter(
     (u) =>
       u.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -248,6 +346,10 @@ export default function UsuariosPage() {
             Administra los usuarios del sistema y sus roles
           </p>
         </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Usuario
+        </Button>
       </div>
 
       <Card>
@@ -367,6 +469,94 @@ export default function UsuariosPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog Crear Usuario */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Nuevo Usuario</DialogTitle>
+            <DialogDescription>
+              Crea un nuevo usuario y asigna su rol en el sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Correo electrónico *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="usuario@ejemplo.com"
+                value={newUserForm.email}
+                onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Contraseña *</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={newUserForm.password}
+                onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="nombres">Nombres *</Label>
+                <Input
+                  id="nombres"
+                  placeholder="Nombres"
+                  value={newUserForm.nombres}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, nombres: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="apellidos">Apellidos *</Label>
+                <Input
+                  id="apellidos"
+                  placeholder="Apellidos"
+                  value={newUserForm.apellidos}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, apellidos: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="empresa">Empresa</Label>
+              <Input
+                id="empresa"
+                placeholder="Nombre de la empresa (opcional)"
+                value={newUserForm.empresa}
+                onChange={(e) => setNewUserForm({ ...newUserForm, empresa: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Rol *</Label>
+              <Select
+                value={newUserForm.role}
+                onValueChange={(value: AppRole) => setNewUserForm({ ...newUserForm, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Usuario</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={createUser} disabled={creating}>
+              {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Crear Usuario
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
