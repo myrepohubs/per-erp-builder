@@ -57,6 +57,7 @@ export default function InventarioPage() {
   const [isCategoriaDialogOpen, setIsCategoriaDialogOpen] = useState(false);
   const [isMovimientoDialogOpen, setIsMovimientoDialogOpen] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
+  const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
 
   // Producto form state
@@ -224,6 +225,41 @@ export default function InventarioPage() {
     },
   });
 
+  const updateCategoriaMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      const { error } = await supabase.from("categorias").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      toast.success("Categoría actualizada exitosamente");
+      setIsCategoriaDialogOpen(false);
+      setEditingCategoria(null);
+      resetCategoriaForm();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Error al actualizar categoría");
+    },
+  });
+
+  const deleteCategoriaMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("categorias").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categorias"] });
+      toast.success("Categoría eliminada exitosamente");
+    },
+    onError: (error: any) => {
+      if (error.message?.includes("productos_categoria_id_fkey")) {
+        toast.error("No se puede eliminar: hay productos asociados a esta categoría");
+      } else {
+        toast.error(error.message || "Error al eliminar categoría");
+      }
+    },
+  });
+
   // Movimiento mutation
   const createMovimientoMutation = useMutation({
     mutationFn: async (newMovimiento: any) => {
@@ -358,7 +394,28 @@ export default function InventarioPage() {
       toast.error("El nombre es obligatorio");
       return;
     }
-    createCategoriaMutation.mutate(categoriaForm);
+    // Validar nombre único
+    const nombreExists = categorias.some(
+      (c) => c.nombre.toLowerCase() === categoriaForm.nombre.toLowerCase() && c.id !== editingCategoria?.id
+    );
+    if (nombreExists) {
+      toast.error("Ya existe una categoría con este nombre");
+      return;
+    }
+    if (editingCategoria) {
+      updateCategoriaMutation.mutate({ id: editingCategoria.id, updates: categoriaForm });
+    } else {
+      createCategoriaMutation.mutate(categoriaForm);
+    }
+  };
+
+  const handleEditCategoria = (categoria: Categoria) => {
+    setEditingCategoria(categoria);
+    setCategoriaForm({
+      nombre: categoria.nombre,
+      descripcion: categoria.descripcion || "",
+    });
+    setIsCategoriaDialogOpen(true);
   };
 
   const handleSaveMovimiento = () => {
@@ -380,17 +437,23 @@ export default function InventarioPage() {
           <p className="text-muted-foreground">Gestión de productos y stock</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={isCategoriaDialogOpen} onOpenChange={setIsCategoriaDialogOpen}>
+          <Dialog open={isCategoriaDialogOpen} onOpenChange={(open) => {
+            setIsCategoriaDialogOpen(open);
+            if (!open) {
+              setEditingCategoria(null);
+              resetCategoriaForm();
+            }
+          }}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={resetCategoriaForm}>
+              <Button variant="outline" onClick={() => { setEditingCategoria(null); resetCategoriaForm(); }}>
                 <Tag className="mr-2 h-4 w-4" />
                 Nueva Categoría
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nueva Categoría</DialogTitle>
-                <DialogDescription>Crea una nueva categoría de productos</DialogDescription>
+                <DialogTitle>{editingCategoria ? "Editar" : "Nueva"} Categoría</DialogTitle>
+                <DialogDescription>{editingCategoria ? "Modifica los datos de la categoría" : "Crea una nueva categoría de productos"}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -414,7 +477,7 @@ export default function InventarioPage() {
                 <Button variant="outline" onClick={() => setIsCategoriaDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveCategoria}>Crear</Button>
+                <Button onClick={handleSaveCategoria}>{editingCategoria ? "Guardar" : "Crear"}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -755,6 +818,7 @@ export default function InventarioPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead className="text-right">Productos</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -765,6 +829,22 @@ export default function InventarioPage() {
                         <TableCell className="font-medium">{cat.nombre}</TableCell>
                         <TableCell>{cat.descripcion || "-"}</TableCell>
                         <TableCell className="text-right">{productosCount}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleEditCategoria(cat)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => deleteCategoriaMutation.mutate(cat.id)}
+                              disabled={productosCount > 0}
+                              title={productosCount > 0 ? "No se puede eliminar: hay productos asociados" : "Eliminar"}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
