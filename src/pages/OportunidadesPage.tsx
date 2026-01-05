@@ -317,7 +317,7 @@ export default function OportunidadesPage() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4">
         {ESTADOS.map((estado) => {
           const oportunidadesEstado = getOportunidadesPorEstado(estado);
           const totalValor = oportunidadesEstado.reduce(
@@ -326,7 +326,7 @@ export default function OportunidadesPage() {
           );
 
           return (
-            <div key={estado} className="min-w-[280px]">
+            <div key={estado} className="min-w-[220px] w-[220px] flex-shrink-0">
               <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium">
