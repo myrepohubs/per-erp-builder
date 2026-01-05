@@ -12,6 +12,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,6 +49,7 @@ export default function ClientesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
+  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({
     ruc: "",
     razon_social: "",
@@ -116,8 +127,6 @@ export default function ClientesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Está seguro de eliminar este cliente?")) return;
-
     try {
       const { error } = await supabase.from("clientes").delete().eq("id", id);
 
@@ -328,7 +337,7 @@ export default function ClientesPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDelete(cliente.id)}
+                          onClick={() => setClienteToDelete(cliente)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -341,6 +350,32 @@ export default function ClientesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* AlertDialog para confirmar eliminación de cliente */}
+      <AlertDialog open={!!clienteToDelete} onOpenChange={(open) => !open && setClienteToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cliente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el cliente "{clienteToDelete?.razon_social}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (clienteToDelete) {
+                  handleDelete(clienteToDelete.id);
+                  setClienteToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
