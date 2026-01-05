@@ -13,6 +13,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, DollarSign, Calendar, Building2 } from "lucide-react";
+import { Plus, DollarSign, Calendar, Building2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 type EstadoOportunidad =
@@ -74,6 +84,8 @@ export default function OportunidadesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingOportunidad, setEditingOportunidad] = useState<Oportunidad | null>(null);
+  const [oportunidadToDelete, setOportunidadToDelete] = useState<Oportunidad | null>(null);
   const [formData, setFormData] = useState({
     nombre_contacto: "",
     empresa_potencial: "",
@@ -116,24 +128,73 @@ export default function OportunidadesPage() {
     e.preventDefault();
 
     try {
-      const { error } = await supabase.from("oportunidades").insert([
-        {
-          ...formData,
-          valor_estimado: parseFloat(formData.valor_estimado) || 0,
-          cliente_asociado: formData.cliente_asociado || null,
-          fecha_cierre_estimada: formData.fecha_cierre_estimada || null,
-          user_id: user?.id,
-        },
-      ]);
+      if (editingOportunidad) {
+        const { error } = await supabase
+          .from("oportunidades")
+          .update({
+            nombre_contacto: formData.nombre_contacto,
+            empresa_potencial: formData.empresa_potencial,
+            valor_estimado: parseFloat(formData.valor_estimado) || 0,
+            estado: formData.estado,
+            notas: formData.notas || null,
+            fecha_cierre_estimada: formData.fecha_cierre_estimada || null,
+            cliente_asociado: formData.cliente_asociado || null,
+          })
+          .eq("id", editingOportunidad.id);
 
-      if (error) throw error;
-      toast.success("Oportunidad creada exitosamente");
+        if (error) throw error;
+        toast.success("Oportunidad actualizada exitosamente");
+      } else {
+        const { error } = await supabase.from("oportunidades").insert([
+          {
+            ...formData,
+            valor_estimado: parseFloat(formData.valor_estimado) || 0,
+            cliente_asociado: formData.cliente_asociado || null,
+            fecha_cierre_estimada: formData.fecha_cierre_estimada || null,
+            user_id: user?.id,
+          },
+        ]);
+
+        if (error) throw error;
+        toast.success("Oportunidad creada exitosamente");
+      }
       setIsDialogOpen(false);
+      setEditingOportunidad(null);
       resetForm();
       fetchData();
     } catch (error: any) {
-      toast.error(error.message || "Error al crear oportunidad");
+      toast.error(error.message || "Error al guardar oportunidad");
     }
+  };
+
+  const handleDelete = async (oportunidad: Oportunidad) => {
+    try {
+      const { error } = await supabase
+        .from("oportunidades")
+        .delete()
+        .eq("id", oportunidad.id);
+
+      if (error) throw error;
+      toast.success("Oportunidad eliminada exitosamente");
+      setOportunidadToDelete(null);
+      fetchData();
+    } catch (error: any) {
+      toast.error("Error al eliminar oportunidad");
+    }
+  };
+
+  const handleEdit = (oportunidad: Oportunidad) => {
+    setEditingOportunidad(oportunidad);
+    setFormData({
+      nombre_contacto: oportunidad.nombre_contacto,
+      empresa_potencial: oportunidad.empresa_potencial,
+      valor_estimado: oportunidad.valor_estimado.toString(),
+      estado: oportunidad.estado,
+      notas: oportunidad.notas || "",
+      fecha_cierre_estimada: oportunidad.fecha_cierre_estimada || "",
+      cliente_asociado: "",
+    });
+    setIsDialogOpen(true);
   };
 
   const updateEstado = async (id: string, nuevoEstado: EstadoOportunidad) => {
@@ -197,7 +258,10 @@ export default function OportunidadesPage() {
           open={isDialogOpen}
           onOpenChange={(open) => {
             setIsDialogOpen(open);
-            if (!open) resetForm();
+            if (!open) {
+              resetForm();
+              setEditingOportunidad(null);
+            }
           }}
         >
           <DialogTrigger asChild>
@@ -208,7 +272,7 @@ export default function OportunidadesPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Nueva Oportunidad</DialogTitle>
+              <DialogTitle>{editingOportunidad ? "Editar Oportunidad" : "Nueva Oportunidad"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -310,7 +374,7 @@ export default function OportunidadesPage() {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit">Crear Oportunidad</Button>
+                <Button type="submit">{editingOportunidad ? "Guardar Cambios" : "Crear Oportunidad"}</Button>
               </div>
             </form>
           </DialogContent>
@@ -402,6 +466,26 @@ export default function OportunidadesPage() {
                               ))}
                             </SelectContent>
                           </Select>
+                          <div className="flex gap-1 pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 flex-1 text-xs"
+                              onClick={() => handleEdit(oportunidad)}
+                            >
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 flex-1 text-xs text-destructive hover:text-destructive"
+                              onClick={() => setOportunidadToDelete(oportunidad)}
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Eliminar
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -412,6 +496,26 @@ export default function OportunidadesPage() {
           );
         })}
       </div>
+
+      <AlertDialog open={!!oportunidadToDelete} onOpenChange={(open) => !open && setOportunidadToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar oportunidad?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la oportunidad "{oportunidadToDelete?.nombre_contacto}" de {oportunidadToDelete?.empresa_potencial}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => oportunidadToDelete && handleDelete(oportunidadToDelete)}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
