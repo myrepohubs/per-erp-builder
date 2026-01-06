@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,6 +58,7 @@ export default function PedidosPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [items, setItems] = useState<ItemPedido[]>([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+  const [pedidoToDelete, setPedidoToDelete] = useState<Pedido | null>(null);
   
   const [formData, setFormData] = useState({
     numero_pedido: "",
@@ -252,17 +254,19 @@ export default function PedidosPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Está seguro de eliminar este pedido?")) return;
+  const handleDelete = async () => {
+    if (!pedidoToDelete) return;
 
-    const { error } = await supabase.from("pedidos").delete().eq("id", id);
+    const { error } = await supabase.from("pedidos").delete().eq("id", pedidoToDelete.id);
 
     if (error) {
       toast.error("Error al eliminar el pedido");
+      setPedidoToDelete(null);
       return;
     }
 
     toast.success("Pedido eliminado exitosamente");
+    setPedidoToDelete(null);
     fetchPedidos();
   };
 
@@ -549,7 +553,7 @@ export default function PedidosPage() {
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(pedido)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(pedido.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => setPedidoToDelete(pedido)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -561,6 +565,25 @@ export default function PedidosPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={!!pedidoToDelete} onOpenChange={(open) => !open && setPedidoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el pedido 
+              <span className="font-semibold"> {pedidoToDelete?.numero_pedido}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
