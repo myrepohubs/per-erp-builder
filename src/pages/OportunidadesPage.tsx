@@ -390,7 +390,7 @@ export default function OportunidadesPage() {
           );
 
           return (
-            <div key={estado} className="min-w-[220px] w-[220px] flex-shrink-0">
+            <div key={estado} className="min-w-[280px] w-[280px] flex-shrink-0">
               <Card className="h-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium">
@@ -466,11 +466,11 @@ export default function OportunidadesPage() {
                               ))}
                             </SelectContent>
                           </Select>
-                          <div className="flex gap-1 pt-1">
+                          <div className="flex gap-2 pt-2 border-t mt-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 flex-1 text-xs"
+                              className="h-8 flex-1 text-xs"
                               onClick={() => handleEdit(oportunidad)}
                             >
                               <Pencil className="h-3 w-3 mr-1" />
@@ -479,7 +479,7 @@ export default function OportunidadesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 flex-1 text-xs text-destructive hover:text-destructive"
+                              className="h-8 flex-1 text-xs text-destructive hover:text-destructive"
                               onClick={() => setOportunidadToDelete(oportunidad)}
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
