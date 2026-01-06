@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,6 +58,7 @@ export default function CotizacionesPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [items, setItems] = useState<ItemCotizacion[]>([{ descripcion: "", cantidad: 1, precio_unitario: 0, subtotal: 0 }]);
+  const [cotizacionToDelete, setCotizacionToDelete] = useState<Cotizacion | null>(null);
   
   const [formData, setFormData] = useState({
     numero_cotizacion: "",
@@ -252,17 +254,19 @@ export default function CotizacionesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Está seguro de eliminar esta cotización?")) return;
+  const handleDelete = async () => {
+    if (!cotizacionToDelete) return;
 
-    const { error } = await supabase.from("cotizaciones").delete().eq("id", id);
+    const { error } = await supabase.from("cotizaciones").delete().eq("id", cotizacionToDelete.id);
 
     if (error) {
       toast.error("Error al eliminar la cotización");
+      setCotizacionToDelete(null);
       return;
     }
 
     toast.success("Cotización eliminada exitosamente");
+    setCotizacionToDelete(null);
     fetchCotizaciones();
   };
 
@@ -549,7 +553,7 @@ export default function CotizacionesPage() {
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(cotizacion)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(cotizacion.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => setCotizacionToDelete(cotizacion)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -561,6 +565,25 @@ export default function CotizacionesPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={!!cotizacionToDelete} onOpenChange={(open) => !open && setCotizacionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la cotización 
+              <span className="font-semibold"> {cotizacionToDelete?.numero_cotizacion}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
