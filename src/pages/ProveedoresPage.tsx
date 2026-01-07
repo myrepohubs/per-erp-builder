@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Building2 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ export default function ProveedoresPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [proveedorToDelete, setProveedorToDelete] = useState<Proveedor | null>(null);
   const [formData, setFormData] = useState({
     ruc: "",
     razon_social: "",
@@ -151,10 +153,11 @@ export default function ProveedoresPage() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("¿Estás seguro de eliminar este proveedor?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleDelete = () => {
+    if (!proveedorToDelete) return;
+    deleteMutation.mutate(proveedorToDelete.id, {
+      onSettled: () => setProveedorToDelete(null),
+    });
   };
 
   return (
@@ -301,7 +304,7 @@ export default function ProveedoresPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(proveedor.id)}
+                        onClick={() => setProveedorToDelete(proveedor)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -313,6 +316,25 @@ export default function ProveedoresPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={!!proveedorToDelete} onOpenChange={(open) => !open && setProveedorToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar proveedor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el proveedor
+              <span className="font-semibold"> {proveedorToDelete?.razon_social}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
