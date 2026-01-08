@@ -260,12 +260,22 @@ export default function OrdenesCompraPage() {
     setOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
       toast.error("Debes agregar al menos un item");
       return;
     }
+
+    // Validar número de orden único
+    const existingOrden = ordenes.find(
+      (o) => o.numero_orden === formData.numero_orden && o.id !== editingId
+    );
+    if (existingOrden) {
+      toast.error("Ya existe una orden con este número");
+      return;
+    }
+
     if (editingId) {
       updateMutation.mutate({ id: editingId, data: formData });
     } else {
