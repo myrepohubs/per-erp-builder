@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ShoppingCart, X } from "lucide-react";
@@ -51,6 +52,7 @@ export default function OrdenesCompraPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [ordenToDelete, setOrdenToDelete] = useState<OrdenCompra | null>(null);
   const [formData, setFormData] = useState({
     numero_orden: "",
     proveedor_id: "",
@@ -298,10 +300,11 @@ export default function OrdenesCompraPage() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("¿Estás seguro de eliminar esta orden de compra?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleDelete = () => {
+    if (!ordenToDelete) return;
+    deleteMutation.mutate(ordenToDelete.id, {
+      onSettled: () => setOrdenToDelete(null),
+    });
   };
 
   const getEstadoBadge = (estado: OrdenCompra["estado"]) => {
@@ -590,7 +593,7 @@ export default function OrdenesCompraPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(orden.id)}
+                        onClick={() => setOrdenToDelete(orden)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -602,6 +605,25 @@ export default function OrdenesCompraPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Diálogo de confirmación para eliminar */}
+      <AlertDialog open={!!ordenToDelete} onOpenChange={(open) => !open && setOrdenToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar orden de compra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la orden
+              <span className="font-semibold"> {ordenToDelete?.numero_orden}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
