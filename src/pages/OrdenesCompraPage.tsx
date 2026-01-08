@@ -170,7 +170,13 @@ export default function OrdenesCompraPage() {
       if (items.length > 0) {
         const { error: itemsError } = await supabase
           .from("items_orden_compra")
-          .insert(items.map((item) => ({ ...item, orden_compra_id: orden.id })));
+          .insert(items.map((item) => ({
+            orden_compra_id: orden.id,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario,
+            subtotal: item.subtotal,
+          })));
         if (itemsError) throw itemsError;
       }
     },
@@ -200,7 +206,13 @@ export default function OrdenesCompraPage() {
       if (items.length > 0) {
         const { error: itemsError } = await supabase
           .from("items_orden_compra")
-          .insert(items.map((item) => ({ ...item, orden_compra_id: id })));
+          .insert(items.map((item) => ({
+            orden_compra_id: id,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario,
+            subtotal: item.subtotal,
+          })));
         if (itemsError) throw itemsError;
       }
     },
