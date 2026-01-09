@@ -61,6 +61,7 @@ export default function InventarioPage() {
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
+  const [productoToDelete, setProductoToDelete] = useState<Producto | null>(null);
 
   // Producto form state
   const [productoForm, setProductoForm] = useState({
@@ -735,11 +736,7 @@ export default function InventarioPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              if (confirm("¿Eliminar este producto?")) {
-                                deleteProductoMutation.mutate(producto.id);
-                              }
-                            }}
+                            onClick={() => setProductoToDelete(producto)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -949,6 +946,33 @@ export default function InventarioPage() {
                 if (categoriaToDelete) {
                   deleteCategoriaMutation.mutate(categoriaToDelete.id);
                   setCategoriaToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog para eliminar producto */}
+      <AlertDialog open={!!productoToDelete} onOpenChange={(open) => !open && setProductoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el producto
+              <span className="font-semibold"> {productoToDelete?.nombre}</span> (SKU: {productoToDelete?.sku}).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (productoToDelete) {
+                  deleteProductoMutation.mutate(productoToDelete.id);
+                  setProductoToDelete(null);
                 }
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
