@@ -7,6 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Building2 } from "lucide-react";
@@ -20,6 +30,7 @@ export default function DepartamentosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Departamento | null>(null);
   const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
+  const [deptToDelete, setDeptToDelete] = useState<Departamento | null>(null);
 
   const { data: departamentos = [], isLoading } = useQuery({
     queryKey: ["departamentos"],
@@ -192,7 +203,7 @@ export default function DepartamentosPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => deleteMutation.mutate(dept.id)}
+                      onClick={() => setDeptToDelete(dept)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -203,6 +214,33 @@ export default function DepartamentosPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* AlertDialog para confirmar eliminación */}
+      <AlertDialog open={!!deptToDelete} onOpenChange={(open) => !open && setDeptToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar departamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el departamento
+              <span className="font-semibold"> {deptToDelete?.nombre}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deptToDelete) {
+                  deleteMutation.mutate(deptToDelete.id);
+                  setDeptToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
