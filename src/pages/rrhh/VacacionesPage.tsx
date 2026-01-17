@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Calendar, Edit } from "lucide-react";
+import { Plus, Calendar, Edit, Trash2 } from "lucide-react";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 
 type Vacacion = Tables<"vacaciones">;
@@ -21,6 +22,7 @@ export default function VacacionesPage() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVac, setEditingVac] = useState<any>(null);
+  const [vacToDelete, setVacToDelete] = useState<any>(null);
   const [formData, setFormData] = useState({
     empleado_id: "",
     fecha_inicio: "",
@@ -82,6 +84,17 @@ export default function VacacionesPage() {
       queryClient.invalidateQueries({ queryKey: ["vacaciones"] });
       toast({ title: "Solicitud actualizada" });
       resetForm();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("vacaciones").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vacaciones"] });
+      toast({ title: "Solicitud eliminada" });
     },
   });
 
@@ -293,9 +306,12 @@ export default function VacacionesPage() {
                       {vac.estado}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
                     <Button size="sm" variant="outline" onClick={() => openEditDialog(vac)}>
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setVacToDelete(vac)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -304,6 +320,32 @@ export default function VacacionesPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <AlertDialog open={!!vacToDelete} onOpenChange={(open) => !open && setVacToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar solicitud de vacaciones?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la solicitud de vacaciones de
+              <span className="font-semibold"> {vacToDelete?.empleados?.apellidos}, {vacToDelete?.empleados?.nombres}</span> del {vacToDelete ? new Date(vacToDelete.fecha_inicio).toLocaleDateString() : ""} al {vacToDelete ? new Date(vacToDelete.fecha_fin).toLocaleDateString() : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (vacToDelete) {
+                  deleteMutation.mutate(vacToDelete.id);
+                  setVacToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
