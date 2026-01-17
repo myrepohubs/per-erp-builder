@@ -6,12 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Clock } from "lucide-react";
+import { Plus, Clock, Pencil, Trash2 } from "lucide-react";
 import type { Tables, TablesInsert, Enums } from "@/integrations/supabase/types";
 
 type Asistencia = Tables<"asistencias">;
@@ -20,6 +30,8 @@ export default function AsistenciasPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAsist, setEditingAsist] = useState<Asistencia | null>(null);
+  const [asistToDelete, setAsistToDelete] = useState<(Asistencia & { empleados?: { nombres: string; apellidos: string } }) | null>(null);
   const [formData, setFormData] = useState({
     empleado_id: "",
     fecha: new Date().toISOString().split("T")[0],
@@ -70,8 +82,35 @@ export default function AsistenciasPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<Asistencia> }) => {
+      const { error } = await supabase
+        .from("asistencias")
+        .update(data.updates)
+        .eq("id", data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["asistencias"] });
+      toast({ title: "Asistencia actualizada exitosamente" });
+      resetForm();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("asistencias").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["asistencias"] });
+      toast({ title: "Asistencia eliminada exitosamente" });
+    },
+  });
+
   const resetForm = () => {
     setIsDialogOpen(false);
+    setEditingAsist(null);
     setFormData({
       empleado_id: "",
       fecha: new Date().toISOString().split("T")[0],
@@ -82,6 +121,19 @@ export default function AsistenciasPage() {
     });
   };
 
+  const handleEdit = (asist: Asistencia) => {
+    setEditingAsist(asist);
+    setFormData({
+      empleado_id: asist.empleado_id,
+      fecha: asist.fecha,
+      tipo: asist.tipo,
+      hora_entrada: asist.hora_entrada || "",
+      hora_salida: asist.hora_salida || "",
+      notas: asist.notas || "",
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -90,7 +142,12 @@ export default function AsistenciasPage() {
       hora_salida: formData.hora_salida || null,
       notas: formData.notas || null,
     };
-    createMutation.mutate(payload);
+
+    if (editingAsist) {
+      updateMutation.mutate({ id: editingAsist.id, updates: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
   };
 
   const getBadgeVariant = (tipo: string) => {
@@ -110,16 +167,16 @@ export default function AsistenciasPage() {
           <h1 className="text-3xl font-bold text-foreground">Asistencias</h1>
           <p className="text-muted-foreground">Control de asistencia del personal</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setIsDialogOpen(true); }}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-primary hover:bg-primary-hover">
+            <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="bg-primary hover:bg-primary-hover">
               <Plus className="mr-2 h-4 w-4" />
               Registrar Asistencia
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Registrar Asistencia</DialogTitle>
+              <DialogTitle>{editingAsist ? "Editar Asistencia" : "Registrar Asistencia"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -198,7 +255,9 @@ export default function AsistenciasPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button type="submit" className="flex-1">Registrar</Button>
+                <Button type="submit" className="flex-1">
+                  {editingAsist ? "Guardar Cambios" : "Registrar"}
+                </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
               </div>
             </form>
@@ -216,16 +275,17 @@ export default function AsistenciasPage() {
               <TableHead>Entrada</TableHead>
               <TableHead>Salida</TableHead>
               <TableHead>Notas</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">Cargando...</TableCell>
+                <TableCell colSpan={7} className="text-center">Cargando...</TableCell>
               </TableRow>
             ) : asistencias.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   <Clock className="mx-auto h-12 w-12 mb-2 opacity-50" />
                   No hay asistencias registradas
                 </TableCell>
@@ -245,12 +305,57 @@ export default function AsistenciasPage() {
                   <TableCell>{asist.hora_entrada || "-"}</TableCell>
                   <TableCell>{asist.hora_salida || "-"}</TableCell>
                   <TableCell className="text-muted-foreground">{asist.notas || "-"}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(asist)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setAsistToDelete(asist)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </Card>
+
+      {/* AlertDialog para confirmar eliminación */}
+      <AlertDialog open={!!asistToDelete} onOpenChange={(open) => !open && setAsistToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar asistencia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el registro de asistencia de
+              <span className="font-semibold"> {asistToDelete?.empleados?.apellidos}, {asistToDelete?.empleados?.nombres}</span> del {asistToDelete ? new Date(asistToDelete.fecha).toLocaleDateString() : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (asistToDelete) {
+                  deleteMutation.mutate(asistToDelete.id);
+                  setAsistToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
