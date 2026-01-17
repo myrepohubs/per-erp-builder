@@ -6,6 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +31,7 @@ export default function EmpleadosPage() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Empleado | null>(null);
+  const [empToDelete, setEmpToDelete] = useState<Empleado | null>(null);
   const [formData, setFormData] = useState({
     nombres: "",
     apellidos: "",
@@ -341,7 +352,7 @@ export default function EmpleadosPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => deleteMutation.mutate(emp.id)}
+                      onClick={() => setEmpToDelete(emp)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -352,6 +363,33 @@ export default function EmpleadosPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* AlertDialog para confirmar eliminación */}
+      <AlertDialog open={!!empToDelete} onOpenChange={(open) => !open && setEmpToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar empleado?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el empleado
+              <span className="font-semibold"> {empToDelete?.nombres} {empToDelete?.apellidos}</span> (DNI: {empToDelete?.dni}).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (empToDelete) {
+                  deleteMutation.mutate(empToDelete.id);
+                  setEmpToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
