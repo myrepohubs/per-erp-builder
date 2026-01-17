@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ export default function CuentasContablesPage() {
   const [editingCuenta, setEditingCuenta] = useState<any>(null);
   const [expandedCuentas, setExpandedCuentas] = useState<Set<string>>(new Set());
   const [isLoadingPCGE, setIsLoadingPCGE] = useState(false);
+  const [cuentaToDelete, setCuentaToDelete] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -195,9 +197,10 @@ export default function CuentasContablesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("¿Está seguro de eliminar esta cuenta?")) {
-      deleteMutation.mutate(id);
+  const confirmDelete = () => {
+    if (cuentaToDelete) {
+      deleteMutation.mutate(cuentaToDelete.id);
+      setCuentaToDelete(null);
     }
   };
 
@@ -413,7 +416,7 @@ export default function CuentasContablesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(cuenta.id)}
+                          onClick={() => setCuentaToDelete(cuenta)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -426,6 +429,27 @@ export default function CuentasContablesPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!cuentaToDelete} onOpenChange={(open) => !open && setCuentaToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar cuenta contable?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la cuenta
+              <span className="font-semibold"> {cuentaToDelete?.codigo} - {cuentaToDelete?.nombre}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
