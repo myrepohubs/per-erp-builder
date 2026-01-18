@@ -138,7 +138,7 @@ export default function AsientosContablesPage() {
     setDetalles([{ cuenta_id: "", debe: 0, haber: 0, glosa: "" }]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const totalDebe = detalles.reduce((sum, d) => sum + Number(d.debe), 0);
@@ -148,6 +148,17 @@ export default function AsientosContablesPage() {
       toast({ 
         title: "Error", 
         description: "El asiento no está balanceado. Debe = Haber",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Check for duplicate numero_asiento
+    const existingAsiento = asientos.find(a => a.numero_asiento === formData.numero_asiento);
+    if (existingAsiento) {
+      toast({ 
+        title: "Error", 
+        description: `Ya existe un asiento con el número "${formData.numero_asiento}". Por favor use un número diferente.`,
         variant: "destructive" 
       });
       return;
