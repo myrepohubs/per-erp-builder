@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,7 @@ import { format } from "date-fns";
 export default function AsientosContablesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAsiento, setEditingAsiento] = useState<any>(null);
+  const [asientoToDelete, setAsientoToDelete] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -105,6 +107,37 @@ export default function AsientosContablesPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { error } = await supabase
+        .from("asientos_contables")
+        .update({
+          numero_asiento: data.numero_asiento,
+          fecha: data.fecha,
+          tipo: data.tipo,
+          glosa: data.glosa,
+          referencia: data.referencia,
+        })
+        .eq("id", data.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["asientos_contables"] });
+      toast({ title: "Asiento actualizado exitosamente" });
+      setIsDialogOpen(false);
+      setEditingAsiento(null);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error al actualizar asiento", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -153,8 +186,11 @@ export default function AsientosContablesPage() {
       return;
     }
 
-    // Check for duplicate numero_asiento
-    const existingAsiento = asientos.find(a => a.numero_asiento === formData.numero_asiento);
+    // Check for duplicate numero_asiento (exclude current if editing)
+    const existingAsiento = asientos.find(a => 
+      a.numero_asiento === formData.numero_asiento && 
+      (!editingAsiento || a.id !== editingAsiento.id)
+    );
     if (existingAsiento) {
       toast({ 
         title: "Error", 
@@ -164,12 +200,29 @@ export default function AsientosContablesPage() {
       return;
     }
 
-    createMutation.mutate(formData);
+    if (editingAsiento) {
+      updateMutation.mutate({ ...formData, id: editingAsiento.id });
+    } else {
+      createMutation.mutate(formData);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("¿Está seguro de eliminar este asiento?")) {
-      deleteMutation.mutate(id);
+  const handleEdit = (asiento: any) => {
+    setEditingAsiento(asiento);
+    setFormData({
+      numero_asiento: asiento.numero_asiento,
+      fecha: asiento.fecha,
+      tipo: asiento.tipo,
+      glosa: asiento.glosa,
+      referencia: asiento.referencia || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (asientoToDelete) {
+      deleteMutation.mutate(asientoToDelete.id);
+      setAsientoToDelete(null);
     }
   };
 
@@ -207,9 +260,9 @@ export default function AsientosContablesPage() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>Nuevo Asiento Contable</DialogTitle>
+                <DialogTitle>{editingAsiento ? "Editar Asiento Contable" : "Nuevo Asiento Contable"}</DialogTitle>
                 <DialogDescription>
-                  Complete la información del asiento
+                  {editingAsiento ? "Modifique la información del asiento" : "Complete la información del asiento"}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -354,7 +407,7 @@ export default function AsientosContablesPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit">Crear Asiento</Button>
+                <Button type="submit">{editingAsiento ? "Guardar Cambios" : "Crear Asiento"}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -405,7 +458,15 @@ export default function AsientosContablesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(asiento.id)}
+                        onClick={() => handleEdit(asiento)}
+                        disabled={asiento.estado === 'Contabilizado'}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAsientoToDelete(asiento)}
                         disabled={asiento.estado === 'Contabilizado'}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -418,6 +479,27 @@ export default function AsientosContablesPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!asientoToDelete} onOpenChange={(open) => !open && setAsientoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar asiento contable?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el asiento
+              <span className="font-semibold"> N° {asientoToDelete?.numero_asiento}</span> con glosa "{asientoToDelete?.glosa}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
