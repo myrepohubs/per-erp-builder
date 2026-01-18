@@ -186,6 +186,36 @@ export default function AsientosContablesPage() {
       return;
     }
 
+    // Validate all detalles have valid accounts
+    for (let i = 0; i < detalles.length; i++) {
+      const detalle = detalles[i];
+      if (!detalle.cuenta_id) {
+        toast({ 
+          title: "Error", 
+          description: `La línea ${i + 1} no tiene una cuenta seleccionada.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      const cuenta = cuentas.find(c => c.id === detalle.cuenta_id);
+      if (cuenta) {
+        // Check if this account is a leaf (no children)
+        const hasChildren = cuentas.some(c => 
+          c.codigo !== cuenta.codigo && 
+          c.codigo.startsWith(cuenta.codigo)
+        );
+        if (hasChildren) {
+          toast({ 
+            title: "Error", 
+            description: `La cuenta "${cuenta.codigo} - ${cuenta.nombre}" es una cuenta de resumen. Solo puede usar cuentas de detalle (último nivel) en los asientos.`,
+            variant: "destructive" 
+          });
+          return;
+        }
+      }
+    }
+
     // Check for duplicate numero_asiento (exclude current if editing)
     const existingAsiento = asientos.find(a => 
       a.numero_asiento === formData.numero_asiento && 
@@ -238,6 +268,24 @@ export default function AsientosContablesPage() {
     const newDetalles = [...detalles];
     newDetalles[index] = { ...newDetalles[index], [field]: value };
     setDetalles(newDetalles);
+  };
+
+  // Check if an account is a leaf (has no children)
+  const isLeafAccount = (cuenta: any) => {
+    const codigoCuenta = cuenta.codigo;
+    // An account is a leaf if no other account starts with its code and is longer
+    return !cuentas.some(c => 
+      c.codigo !== codigoCuenta && 
+      c.codigo.startsWith(codigoCuenta)
+    );
+  };
+
+  // Get cuenta info for display
+  const getCuentaInfo = (cuentaId: string) => {
+    const cuenta = cuentas.find(c => c.id === cuentaId);
+    if (!cuenta) return null;
+    const isLeaf = isLeafAccount(cuenta);
+    return { cuenta, isLeaf };
   };
 
   const totalDebe = detalles.reduce((sum, d) => sum + Number(d.debe), 0);
@@ -330,67 +378,96 @@ export default function AsientosContablesPage() {
                     </Button>
                   </div>
                   
-                  {detalles.map((detalle, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-end">
-                      <div className="col-span-4">
-                        <Label className="text-xs">Cuenta</Label>
-                        <Select 
-                          value={detalle.cuenta_id} 
-                          onValueChange={(value) => updateDetalle(index, "cuenta_id", value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Seleccione..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cuentas.map((cuenta) => (
-                              <SelectItem key={cuenta.id} value={cuenta.id}>
-                                {cuenta.codigo} - {cuenta.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                  {detalles.map((detalle, index) => {
+                    const cuentaInfo = getCuentaInfo(detalle.cuenta_id);
+                    const isValidAccount = cuentaInfo?.isLeaf ?? true;
+                    
+                    return (
+                      <div key={index} className="mb-4">
+                        <div className="grid grid-cols-12 gap-2 items-end">
+                          <div className="col-span-4">
+                            <Label className="text-xs">Cuenta</Label>
+                            <Select 
+                              value={detalle.cuenta_id} 
+                              onValueChange={(value) => updateDetalle(index, "cuenta_id", value)}
+                            >
+                              <SelectTrigger className={`h-8 ${!isValidAccount ? 'border-amber-500' : ''}`}>
+                                <SelectValue placeholder="Seleccione..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {cuentas.map((cuenta) => {
+                                  const leaf = isLeafAccount(cuenta);
+                                  return (
+                                    <SelectItem 
+                                      key={cuenta.id} 
+                                      value={cuenta.id}
+                                      className={!leaf ? 'text-muted-foreground' : ''}
+                                    >
+                                      {cuenta.codigo} - {cuenta.nombre}
+                                      {!leaf && ' (resumen)'}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Debe</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={detalle.debe}
+                              onChange={(e) => updateDetalle(index, "debe", e.target.value)}
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Haber</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={detalle.haber}
+                              onChange={(e) => updateDetalle(index, "haber", e.target.value)}
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <Label className="text-xs">Glosa</Label>
+                            <Input
+                              value={detalle.glosa}
+                              onChange={(e) => updateDetalle(index, "glosa", e.target.value)}
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeDetalle(index)}
+                              className="h-8"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        {/* Mensaje informativo sobre el tipo de cuenta */}
+                        {cuentaInfo && (
+                          <div className={`text-xs mt-1 px-1 ${isValidAccount ? 'text-muted-foreground' : 'text-amber-600'}`}>
+                            {isValidAccount ? (
+                              <span>
+                                ✓ Cuenta de detalle: <strong>{cuentaInfo.cuenta.tipo}</strong> - {cuentaInfo.cuenta.nombre}
+                              </span>
+                            ) : (
+                              <span>
+                                ⚠ Esta es una cuenta de resumen. Debe seleccionar una subcuenta de mayor detalle para registrar el asiento.
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Debe</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={detalle.debe}
-                          onChange={(e) => updateDetalle(index, "debe", e.target.value)}
-                          className="h-8"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Haber</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={detalle.haber}
-                          onChange={(e) => updateDetalle(index, "haber", e.target.value)}
-                          className="h-8"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <Label className="text-xs">Glosa</Label>
-                        <Input
-                          value={detalle.glosa}
-                          onChange={(e) => updateDetalle(index, "glosa", e.target.value)}
-                          className="h-8"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeDetalle(index)}
-                          className="h-8"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <div className="grid grid-cols-12 gap-2 mt-4 font-bold border-t pt-2">
                     <div className="col-span-4 text-right">TOTALES:</div>
