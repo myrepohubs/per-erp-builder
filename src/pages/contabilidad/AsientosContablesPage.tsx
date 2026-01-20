@@ -186,13 +186,35 @@ export default function AsientosContablesPage() {
       return;
     }
 
-    // Validate all detalles have valid accounts
+    // Validate all detalles have valid accounts and correct debe/haber values
     for (let i = 0; i < detalles.length; i++) {
       const detalle = detalles[i];
       if (!detalle.cuenta_id) {
         toast({ 
           title: "Error", 
           description: `La línea ${i + 1} no tiene una cuenta seleccionada.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Validate that each line has only debe OR haber, not both
+      const debe = Number(detalle.debe);
+      const haber = Number(detalle.haber);
+      
+      if (debe > 0 && haber > 0) {
+        toast({ 
+          title: "Error", 
+          description: `La línea ${i + 1} tiene valores en Debe y Haber. Cada línea debe tener solo Debe O solo Haber, no ambos.`,
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      if (debe === 0 && haber === 0) {
+        toast({ 
+          title: "Error", 
+          description: `La línea ${i + 1} no tiene monto. Ingrese un valor en Debe o en Haber.`,
           variant: "destructive" 
         });
         return;
@@ -266,7 +288,14 @@ export default function AsientosContablesPage() {
 
   const updateDetalle = (index: number, field: string, value: any) => {
     const newDetalles = [...detalles];
-    newDetalles[index] = { ...newDetalles[index], [field]: value };
+    // When entering debe, clear haber and vice versa (only one can have a value)
+    if (field === 'debe' && Number(value) > 0) {
+      newDetalles[index] = { ...newDetalles[index], [field]: value, haber: 0 };
+    } else if (field === 'haber' && Number(value) > 0) {
+      newDetalles[index] = { ...newDetalles[index], [field]: value, debe: 0 };
+    } else {
+      newDetalles[index] = { ...newDetalles[index], [field]: value };
+    }
     setDetalles(newDetalles);
   };
 
