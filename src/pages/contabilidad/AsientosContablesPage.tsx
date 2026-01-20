@@ -27,6 +27,7 @@ export default function AsientosContablesPage() {
     tipo: "Diario" as const,
     glosa: "",
     referencia: "",
+    estado: "Borrador" as string,
   });
 
   const [detalles, setDetalles] = useState<Array<{ cuenta_id: string; debe: number; haber: number; glosa: string }>>([
@@ -118,6 +119,7 @@ export default function AsientosContablesPage() {
           tipo: data.tipo,
           glosa: data.glosa,
           referencia: data.referencia,
+          estado: data.estado,
         })
         .eq("id", data.id);
 
@@ -191,6 +193,7 @@ export default function AsientosContablesPage() {
       tipo: "Diario",
       glosa: "",
       referencia: "",
+      estado: "Borrador",
     });
     setDetalles([{ cuenta_id: "", debe: 0, haber: 0, glosa: "" }]);
   };
@@ -291,6 +294,7 @@ export default function AsientosContablesPage() {
       tipo: asiento.tipo,
       glosa: asiento.glosa,
       referencia: asiento.referencia || "",
+      estado: asiento.estado || "Borrador",
     });
     
     // Fetch detalles for this asiento
@@ -413,7 +417,7 @@ export default function AsientosContablesPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="tipo">Tipo</Label>
                     <Select value={formData.tipo} onValueChange={(value: any) => setFormData({ ...formData, tipo: value })}>
@@ -425,6 +429,19 @@ export default function AsientosContablesPage() {
                         <SelectItem value="Diario">Diario</SelectItem>
                         <SelectItem value="Ajuste">Ajuste</SelectItem>
                         <SelectItem value="Cierre">Cierre</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="estado">Estado</Label>
+                    <Select value={formData.estado} onValueChange={(value: string) => setFormData({ ...formData, estado: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Borrador">Borrador</SelectItem>
+                        <SelectItem value="Aprobado">Aprobado</SelectItem>
+                        <SelectItem value="Anulado">Anulado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
