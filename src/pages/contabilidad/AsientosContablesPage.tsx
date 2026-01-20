@@ -109,6 +109,7 @@ export default function AsientosContablesPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Update the asiento
       const { error } = await supabase
         .from("asientos_contables")
         .update({
@@ -121,6 +122,29 @@ export default function AsientosContablesPage() {
         .eq("id", data.id);
 
       if (error) throw error;
+
+      // Delete existing detalles and insert new ones
+      const { error: deleteError } = await supabase
+        .from("detalles_asiento")
+        .delete()
+        .eq("asiento_id", data.id);
+
+      if (deleteError) throw deleteError;
+
+      // Insert updated detalles
+      const detallesConAsiento = detalles.map(detalle => ({
+        cuenta_id: detalle.cuenta_id,
+        debe: Number(detalle.debe),
+        haber: Number(detalle.haber),
+        glosa: detalle.glosa,
+        asiento_id: data.id
+      }));
+
+      const { error: insertError } = await supabase
+        .from("detalles_asiento")
+        .insert(detallesConAsiento);
+
+      if (insertError) throw insertError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["asientos_contables"] });
@@ -259,7 +283,7 @@ export default function AsientosContablesPage() {
     }
   };
 
-  const handleEdit = (asiento: any) => {
+  const handleEdit = async (asiento: any) => {
     setEditingAsiento(asiento);
     setFormData({
       numero_asiento: asiento.numero_asiento,
@@ -268,6 +292,31 @@ export default function AsientosContablesPage() {
       glosa: asiento.glosa,
       referencia: asiento.referencia || "",
     });
+    
+    // Fetch detalles for this asiento
+    const { data: detallesData, error } = await supabase
+      .from("detalles_asiento")
+      .select("*")
+      .eq("asiento_id", asiento.id);
+    
+    if (error) {
+      toast({ 
+        title: "Error al cargar detalles", 
+        description: error.message,
+        variant: "destructive" 
+      });
+      setDetalles([{ cuenta_id: "", debe: 0, haber: 0, glosa: "" }]);
+    } else if (detallesData && detallesData.length > 0) {
+      setDetalles(detallesData.map(d => ({
+        cuenta_id: d.cuenta_id,
+        debe: d.debe,
+        haber: d.haber,
+        glosa: d.glosa || ""
+      })));
+    } else {
+      setDetalles([{ cuenta_id: "", debe: 0, haber: 0, glosa: "" }]);
+    }
+    
     setIsDialogOpen(true);
   };
 
