@@ -231,46 +231,32 @@ export default function UsuariosPage() {
     try {
       setCreating(true);
 
-      // Crear usuario en auth usando signUp (el trigger creará el profile y rol automáticamente)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newUserForm.email,
-        password: newUserForm.password,
-        options: {
-          data: {
-            nombres: newUserForm.nombres,
-            apellidos: newUserForm.apellidos,
-          },
+      // Get current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Sesión no válida");
+        return;
+      }
+
+      // Call edge function to create user without affecting admin session
+      const response = await supabase.functions.invoke("create-user", {
+        body: {
+          email: newUserForm.email,
+          password: newUserForm.password,
+          nombres: newUserForm.nombres,
+          apellidos: newUserForm.apellidos,
+          empresa: newUserForm.empresa || null,
+          role: newUserForm.role,
         },
       });
 
-      if (authError) {
-        if (authError.message.includes("already registered")) {
-          toast.error("Ya existe un usuario con este correo electrónico");
-        } else {
-          throw authError;
-        }
+      if (response.error) {
+        throw new Error(response.error.message || "Error al crear usuario");
+      }
+
+      if (response.data?.error) {
+        toast.error(response.data.error);
         return;
-      }
-
-      if (!authData.user) {
-        toast.error("Error al crear el usuario");
-        return;
-      }
-
-      // Actualizar el profile con la empresa si se proporcionó
-      if (newUserForm.empresa) {
-        await supabase
-          .from("profiles")
-          .update({ empresa: newUserForm.empresa })
-          .eq("user_id", authData.user.id);
-      }
-
-      // Actualizar el rol si no es 'user' (el trigger ya asigna 'user' por defecto)
-      if (newUserForm.role !== "user") {
-        await supabase
-          .from("user_roles")
-          .update({ role: newUserForm.role })
-          .eq("user_id", authData.user.id);
       }
 
       toast.success("Usuario creado correctamente");
