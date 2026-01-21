@@ -40,6 +40,18 @@ export default function LibroMayorPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
+      // Get the selected account's code
+      const cuentaSeleccionadaObj = cuentas.find(c => c.id === cuentaSeleccionada);
+      if (!cuentaSeleccionadaObj) return [];
+
+      const codigoBase = cuentaSeleccionadaObj.codigo;
+
+      // Find all accounts whose code starts with the selected code (hierarchical filter)
+      const cuentasHijas = cuentas.filter(c => c.codigo.startsWith(codigoBase));
+      const cuentaIds = cuentasHijas.map(c => c.id);
+
+      if (cuentaIds.length === 0) return [];
+
       const { data: detallesData, error: detallesError } = await supabase
         .from("detalles_asiento")
         .select(`
@@ -50,9 +62,13 @@ export default function LibroMayorPage() {
             glosa,
             tipo,
             user_id
+          ),
+          cuentas_contables(
+            codigo,
+            nombre
           )
         `)
-        .eq("cuenta_id", cuentaSeleccionada)
+        .in("cuenta_id", cuentaIds)
         .eq("asientos_contables.user_id", user.id)
         .gte("asientos_contables.fecha", fechaInicio)
         .lte("asientos_contables.fecha", fechaFin)
@@ -62,7 +78,7 @@ export default function LibroMayorPage() {
 
       return detallesData || [];
     },
-    enabled: !!cuentaSeleccionada,
+    enabled: !!cuentaSeleccionada && cuentas.length > 0,
   });
 
   let saldo = 0;
