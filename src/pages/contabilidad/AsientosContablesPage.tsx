@@ -461,6 +461,8 @@ export default function AsientosContablesPage() {
                     value={formData.glosa}
                     onChange={(e) => setFormData({ ...formData, glosa: e.target.value })}
                     required
+                    onInvalid={(e) => e.currentTarget.setCustomValidity("Por favor, ingrese la glosa del asiento contable")}
+                    onInput={(e) => e.currentTarget.setCustomValidity("")}
                   />
                 </div>
 
