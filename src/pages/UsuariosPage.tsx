@@ -41,7 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Users, Shield, Search, UserX, UserCheck, Trash2, Loader2, Plus, Pencil } from "lucide-react";
+import { Users, Shield, Search, Trash2, Loader2, Plus, Pencil } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface UserWithRole {
   id: string;
@@ -295,13 +296,14 @@ export default function UsuariosPage() {
       return;
     }
 
+    setCreating(true);
+    
     try {
-      setCreating(true);
-
       // Get current session token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Sesión no válida");
+        setCreating(false);
         return;
       }
 
@@ -317,17 +319,40 @@ export default function UsuariosPage() {
         },
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || "Error al crear usuario");
-      }
-
+      // Check for error in response.data (Edge Function returns error in body with status 400)
       if (response.data?.error) {
-        // Handle duplicate email error specifically
-        if (response.data.error.includes("correo electrónico") || response.data.error.includes("email")) {
-          toast.warning("El correo electrónico ingresado ya está en uso por otro usuario");
+        const errorMsg = response.data.error;
+        if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already")) {
+          toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
+          setCreating(false);
           return;
         }
-        toast.error(response.data.error);
+        toast.error(errorMsg);
+        setCreating(false);
+        return;
+      }
+
+      // Check for network/invocation error
+      if (response.error) {
+        // Parse error message for duplicate email
+        const errorContext = response.error.context;
+        if (errorContext && typeof errorContext === 'object') {
+          try {
+            const bodyText = await (errorContext as Response).text?.();
+            if (bodyText) {
+              const parsed = JSON.parse(bodyText);
+              if (parsed.error?.includes("correo electrónico") || parsed.error?.includes("already")) {
+                toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
+                setCreating(false);
+                return;
+              }
+            }
+          } catch {
+            // Ignore parsing errors
+          }
+        }
+        toast.error(response.error.message || "Error al crear usuario");
+        setCreating(false);
         return;
       }
 
@@ -337,11 +362,13 @@ export default function UsuariosPage() {
     } catch (error: any) {
       console.error("Error creating user:", error);
       // Handle duplicate email error from exception
-      if (error.message?.includes("correo electrónico") || error.message?.includes("email") || error.message?.includes("already")) {
-        toast.warning("El correo electrónico ingresado ya está en uso por otro usuario");
+      const errorMsg = error.message || "";
+      if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already")) {
+        toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
+        setCreating(false);
         return;
       }
-      toast.error(error.message || "Error al crear usuario");
+      toast.error(errorMsg || "Error al crear usuario");
     } finally {
       setCreating(false);
     }
@@ -479,12 +506,16 @@ export default function UsuariosPage() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={user.activo ? "default" : "secondary"}
-                        className={user.activo ? "bg-green-600" : ""}
-                      >
-                        {user.activo ? "Activo" : "Inactivo"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={user.activo}
+                          onCheckedChange={() => toggleUserActive(user.user_id, user.activo)}
+                          disabled={user.user_id === currentUser?.id}
+                        />
+                        <span className={user.activo ? "text-green-600" : "text-muted-foreground"}>
+                          {user.activo ? "Activo" : "Inactivo"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString("es-PE")}
