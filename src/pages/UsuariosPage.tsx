@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Users, Shield, Search, UserX, UserCheck, Trash2, Loader2, Plus } from "lucide-react";
+import { Users, Shield, Search, UserX, UserCheck, Trash2, Loader2, Plus, Pencil } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -84,6 +84,7 @@ export default function UsuariosPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newUserForm, setNewUserForm] = useState<NewUserForm>(initialNewUserForm);
   const [creating, setCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
 
   useEffect(() => {
     if (isAdmin) {
@@ -217,9 +218,75 @@ export default function UsuariosPage() {
     }
   }
 
+  function openEditDialog(user: UserWithRole) {
+    setEditingUser(user);
+    setNewUserForm({
+      email: user.email || "",
+      password: "",
+      nombres: user.nombres,
+      apellidos: user.apellidos,
+      empresa: user.empresa || "",
+      role: user.role,
+    });
+    setCreateDialogOpen(true);
+  }
+
+  function closeUserDialog() {
+    setCreateDialogOpen(false);
+    setEditingUser(null);
+    setNewUserForm(initialNewUserForm);
+  }
+
+  async function handleSubmitUser() {
+    if (!newUserForm.nombres || !newUserForm.apellidos) {
+      toast.error("Por favor complete nombres y apellidos");
+      return;
+    }
+
+    if (editingUser) {
+      await updateUser();
+    } else {
+      await createUser();
+    }
+  }
+
+  async function updateUser() {
+    if (!editingUser) return;
+
+    try {
+      setCreating(true);
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          nombres: newUserForm.nombres,
+          apellidos: newUserForm.apellidos,
+          empresa: newUserForm.empresa || null,
+        })
+        .eq("user_id", editingUser.user_id);
+
+      if (profileError) throw profileError;
+
+      // Update role if changed
+      if (newUserForm.role !== editingUser.role) {
+        await updateUserRole(editingUser.user_id, newUserForm.role);
+      }
+
+      toast.success("Usuario actualizado correctamente");
+      closeUserDialog();
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      toast.error(error.message || "Error al actualizar usuario");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   async function createUser() {
-    if (!newUserForm.email || !newUserForm.password || !newUserForm.nombres || !newUserForm.apellidos) {
-      toast.error("Por favor complete todos los campos obligatorios");
+    if (!newUserForm.email || !newUserForm.password) {
+      toast.error("Por favor complete email y contraseña");
       return;
     }
 
@@ -255,16 +322,25 @@ export default function UsuariosPage() {
       }
 
       if (response.data?.error) {
+        // Handle duplicate email error specifically
+        if (response.data.error.includes("correo electrónico") || response.data.error.includes("email")) {
+          toast.warning("El correo electrónico ingresado ya está en uso por otro usuario");
+          return;
+        }
         toast.error(response.data.error);
         return;
       }
 
       toast.success("Usuario creado correctamente");
-      setCreateDialogOpen(false);
-      setNewUserForm(initialNewUserForm);
+      closeUserDialog();
       fetchUsers();
     } catch (error: any) {
       console.error("Error creating user:", error);
+      // Handle duplicate email error from exception
+      if (error.message?.includes("correo electrónico") || error.message?.includes("email") || error.message?.includes("already")) {
+        toast.warning("El correo electrónico ingresado ya está en uso por otro usuario");
+        return;
+      }
       toast.error(error.message || "Error al crear usuario");
     } finally {
       setCreating(false);
@@ -418,21 +494,11 @@ export default function UsuariosPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() =>
-                            toggleUserActive(user.user_id, user.activo)
-                          }
+                          onClick={() => openEditDialog(user)}
                           disabled={user.user_id === currentUser?.id}
-                          title={
-                            user.activo
-                              ? "Desactivar usuario"
-                              : "Activar usuario"
-                          }
+                          title="Editar usuario"
                         >
-                          {user.activo ? (
-                            <UserX className="h-4 w-4" />
-                          ) : (
-                            <UserCheck className="h-4 w-4" />
-                          )}
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="destructive"
@@ -456,36 +522,45 @@ export default function UsuariosPage() {
         </CardContent>
       </Card>
 
-      {/* Dialog Crear Usuario */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      {/* Dialog Crear/Editar Usuario */}
+      <Dialog open={createDialogOpen} onOpenChange={(open) => {
+        if (!open) closeUserDialog();
+        else setCreateDialogOpen(open);
+      }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Nuevo Usuario</DialogTitle>
+            <DialogTitle>{editingUser ? "Editar Usuario" : "Nuevo Usuario"}</DialogTitle>
             <DialogDescription>
-              Crea un nuevo usuario y asigna su rol en el sistema.
+              {editingUser 
+                ? "Modifica los datos del usuario seleccionado."
+                : "Crea un nuevo usuario y asigna su rol en el sistema."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Correo electrónico *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="usuario@ejemplo.com"
-                value={newUserForm.email}
-                onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Contraseña *</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={newUserForm.password}
-                onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-              />
-            </div>
+            {!editingUser && (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Correo electrónico *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="usuario@ejemplo.com"
+                    value={newUserForm.email}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Contraseña *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={newUserForm.password}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="nombres">Nombres *</Label>
@@ -533,12 +608,12 @@ export default function UsuariosPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+            <Button variant="outline" onClick={closeUserDialog}>
               Cancelar
             </Button>
-            <Button onClick={createUser} disabled={creating}>
+            <Button onClick={handleSubmitUser} disabled={creating}>
               {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Crear Usuario
+              {editingUser ? "Guardar Cambios" : "Crear Usuario"}
             </Button>
           </DialogFooter>
         </DialogContent>
