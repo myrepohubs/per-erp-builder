@@ -308,22 +308,36 @@ export default function UsuariosPage() {
       }
 
       // Call edge function to create user without affecting admin session
-      const response = await supabase.functions.invoke("create-user", {
-        body: {
-          email: newUserForm.email,
-          password: newUserForm.password,
-          nombres: newUserForm.nombres,
-          apellidos: newUserForm.apellidos,
-          empresa: newUserForm.empresa || null,
-          role: newUserForm.role,
-        },
-      });
+      let response;
+      try {
+        response = await supabase.functions.invoke("create-user", {
+          body: {
+            email: newUserForm.email,
+            password: newUserForm.password,
+            nombres: newUserForm.nombres,
+            apellidos: newUserForm.apellidos,
+            empresa: newUserForm.empresa || null,
+            role: newUserForm.role,
+          },
+        });
+      } catch (invokeError: any) {
+        // Handle network/invocation errors that throw exceptions
+        const errorStr = invokeError?.message || String(invokeError) || "";
+        if (errorStr.includes("correo electrónico") || errorStr.includes("email") || errorStr.includes("already") || errorStr.includes("Ya existe")) {
+          toast.error("Ya existe un usuario registrado con este correo electrónico");
+          setCreating(false);
+          return;
+        }
+        toast.error("Error al crear usuario");
+        setCreating(false);
+        return;
+      }
 
       // Check for error in response.data (Edge Function returns error in body with status 400)
       if (response.data?.error) {
         const errorMsg = response.data.error;
-        if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already")) {
-          toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
+        if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already") || errorMsg.includes("Ya existe")) {
+          toast.error("Ya existe un usuario registrado con este correo electrónico");
           setCreating(false);
           return;
         }
@@ -332,17 +346,25 @@ export default function UsuariosPage() {
         return;
       }
 
-      // Check for network/invocation error
+      // Check for network/invocation error in response object
       if (response.error) {
-        // Parse error message for duplicate email
+        // Try to parse error message for duplicate email
+        const errorMessage = response.error.message || "";
+        if (errorMessage.includes("correo electrónico") || errorMessage.includes("email") || errorMessage.includes("already") || errorMessage.includes("Ya existe")) {
+          toast.error("Ya existe un usuario registrado con este correo electrónico");
+          setCreating(false);
+          return;
+        }
+        
+        // Try to extract error from context if available
         const errorContext = response.error.context;
         if (errorContext && typeof errorContext === 'object') {
           try {
             const bodyText = await (errorContext as Response).text?.();
             if (bodyText) {
               const parsed = JSON.parse(bodyText);
-              if (parsed.error?.includes("correo electrónico") || parsed.error?.includes("already")) {
-                toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
+              if (parsed.error?.includes("correo electrónico") || parsed.error?.includes("already") || parsed.error?.includes("Ya existe")) {
+                toast.error("Ya existe un usuario registrado con este correo electrónico");
                 setCreating(false);
                 return;
               }
@@ -351,7 +373,7 @@ export default function UsuariosPage() {
             // Ignore parsing errors
           }
         }
-        toast.error(response.error.message || "Error al crear usuario");
+        toast.error("Error al crear usuario");
         setCreating(false);
         return;
       }
@@ -361,14 +383,13 @@ export default function UsuariosPage() {
       fetchUsers();
     } catch (error: any) {
       console.error("Error creating user:", error);
-      // Handle duplicate email error from exception
-      const errorMsg = error.message || "";
-      if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already")) {
-        toast.error("Error: Ya existe un usuario registrado con este correo electrónico");
-        setCreating(false);
-        return;
+      // Handle any unexpected errors
+      const errorMsg = error?.message || String(error) || "";
+      if (errorMsg.includes("correo electrónico") || errorMsg.includes("email") || errorMsg.includes("already") || errorMsg.includes("Ya existe")) {
+        toast.error("Ya existe un usuario registrado con este correo electrónico");
+      } else {
+        toast.error("Error al crear usuario");
       }
-      toast.error(errorMsg || "Error al crear usuario");
     } finally {
       setCreating(false);
     }
