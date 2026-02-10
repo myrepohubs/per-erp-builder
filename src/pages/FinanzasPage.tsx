@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Wallet } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Receipt, Wallet } from "lucide-react";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -103,36 +103,27 @@ export default function FinanzasPage() {
   const utilidadNeta = ingresosTotales - gastosTotales;
   const margenUtilidad = ingresosTotales > 0 ? ((utilidadNeta / ingresosTotales) * 100).toFixed(2) : "0.00";
 
-  // Datos para gráficos (siempre usa datos del año completo, acumulativos)
-  const monthlyData = (() => {
-    let acumIngresos = 0;
-    let acumGastos = 0;
-    return Array.from({ length: 12 }, (_, i) => {
-      const monthDate = new Date(selectedYear, i);
-      const mStart = format(startOfMonth(monthDate), "yyyy-MM-dd");
-      const mEnd = format(endOfMonth(monthDate), "yyyy-MM-dd");
+  // Datos para gráficos (siempre usa datos del año completo)
+  const monthlyData = Array.from({ length: 12 }, (_, i) => {
+    const monthDate = new Date(selectedYear, i);
+    const monthStart = format(startOfMonth(monthDate), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(monthDate), "yyyy-MM-dd");
 
-      const ingMes = allFacturas
-        .filter((f) => f.fecha_emision >= mStart && f.fecha_emision <= mEnd && f.estado === "Pagada")
-        .reduce((sum, f) => sum + Number(f.total), 0);
+    const ingresos = allFacturas
+      .filter((f) => f.fecha_emision >= monthStart && f.fecha_emision <= monthEnd && f.estado === "Pagada")
+      .reduce((sum, f) => sum + Number(f.total), 0);
 
-      const gasMes = allOrdenesCompra
-        .filter((o) => o.fecha_orden >= mStart && o.fecha_orden <= mEnd && o.estado === "Aprobado")
-        .reduce((sum, o) => sum + Number(o.total), 0);
+    const gastos = allOrdenesCompra
+      .filter((o) => o.fecha_orden >= monthStart && o.fecha_orden <= monthEnd && o.estado === "Aprobado")
+      .reduce((sum, o) => sum + Number(o.total), 0);
 
-      acumIngresos += ingMes;
-      acumGastos += gasMes;
-
-      return {
-        mes: format(monthDate, "MMM", { locale: es }),
-        ingresos: Number(acumIngresos.toFixed(2)),
-        gastos: Number(acumGastos.toFixed(2)),
-        utilidad: Number((acumIngresos - acumGastos).toFixed(2)),
-        ingresosMes: Number(ingMes.toFixed(2)),
-        gastosMes: Number(gasMes.toFixed(2)),
-      };
-    });
-  })();
+    return {
+      mes: format(monthDate, "MMM", { locale: es }),
+      ingresos: Number(ingresos.toFixed(2)),
+      gastos: Number(gastos.toFixed(2)),
+      utilidad: Number((ingresos - gastos).toFixed(2)),
+    };
+  });
 
   const estadoFacturas = [
     { name: "Pagadas", value: facturas.filter((f) => f.estado === "Pagada").length },
@@ -274,45 +265,29 @@ export default function FinanzasPage() {
         <TabsContent value="trends" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Tendencia Acumulada de Ingresos y Gastos</CardTitle>
+              <CardTitle>Tendencia de Ingresos y Gastos</CardTitle>
               <CardDescription>
-                Evolución acumulada mensual del año {selectedYear}
+                Evolución mensual de ingresos, gastos y utilidad
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={380}>
-                <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient id="gradIngresos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gradGastos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gradUtilidad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `S/.${v}`} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                    formatter={(value: number) => [`S/. ${value.toFixed(2)}`, undefined]}
+                      borderRadius: "var(--radius)"
+                    }} 
                   />
-                  <Legend iconType="circle" />
-                  <Area type="monotone" dataKey="ingresos" stroke="hsl(var(--chart-1))" strokeWidth={2.5} fill="url(#gradIngresos)" name="Ingresos" dot={false} activeDot={{ r: 5 }} />
-                  <Area type="monotone" dataKey="gastos" stroke="hsl(var(--chart-2))" strokeWidth={2.5} fill="url(#gradGastos)" name="Gastos" dot={false} activeDot={{ r: 5 }} />
-                  <Area type="monotone" dataKey="utilidad" stroke="hsl(var(--chart-3))" strokeWidth={2.5} fill="url(#gradUtilidad)" name="Utilidad" dot={false} activeDot={{ r: 5 }} />
-                </AreaChart>
+                  <Legend />
+                  <Line type="monotone" dataKey="ingresos" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Ingresos" />
+                  <Line type="monotone" dataKey="gastos" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Gastos" />
+                  <Line type="monotone" dataKey="utilidad" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Utilidad" />
+                </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
@@ -323,27 +298,25 @@ export default function FinanzasPage() {
             <CardHeader>
               <CardTitle>Comparación Mensual</CardTitle>
               <CardDescription>
-                Ingresos vs Gastos por mes (no acumulado)
+                Ingresos vs Gastos por mes
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={380}>
-                <BarChart data={monthlyData} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `S/.${v}`} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                    formatter={(value: number) => [`S/. ${value.toFixed(2)}`, undefined]}
+                      borderRadius: "var(--radius)"
+                    }} 
                   />
-                  <Legend iconType="circle" />
-                  <Bar dataKey="ingresosMes" fill="hsl(var(--chart-1))" name="Ingresos" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="gastosMes" fill="hsl(var(--chart-2))" name="Gastos" radius={[4, 4, 0, 0]} />
+                  <Legend />
+                  <Bar dataKey="ingresos" fill="hsl(var(--chart-1))" name="Ingresos" />
+                  <Bar dataKey="gastos" fill="hsl(var(--chart-2))" name="Gastos" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -359,7 +332,7 @@ export default function FinanzasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={380}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={estadoFacturas}
@@ -367,25 +340,21 @@ export default function FinanzasPage() {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={130}
-                    innerRadius={60}
+                    outerRadius={120}
                     fill="hsl(var(--chart-1))"
                     dataKey="value"
-                    paddingAngle={3}
                   >
-                    {estadoFacturas.map((_, index) => (
+                    {estadoFacturas.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
+                      borderRadius: "var(--radius)"
+                    }} 
                   />
-                  <Legend iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -401,21 +370,19 @@ export default function FinanzasPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={380}>
-                <BarChart data={topClientes} layout="vertical" barSize={24}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `S/.${v}`} />
-                  <YAxis dataKey="nombre" type="category" stroke="hsl(var(--muted-foreground))" width={150} fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={topClientes} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis dataKey="nombre" type="category" stroke="hsl(var(--muted-foreground))" width={150} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
                       border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                    formatter={(value: number) => [`S/. ${value.toFixed(2)}`, undefined]}
+                      borderRadius: "var(--radius)"
+                    }} 
                   />
-                  <Bar dataKey="total" fill="hsl(var(--chart-1))" name="Total (S/.)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="total" fill="hsl(var(--chart-1))" name="Total (S/.)" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
