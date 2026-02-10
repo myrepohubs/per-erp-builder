@@ -32,19 +32,22 @@ export default function FinanzasPage() {
     }
   };
 
-  const { data: facturas = [] } = useQuery({
-    queryKey: ["facturas", period, selectedMonth, selectedYear],
+  // Always fetch full year data for charts
+  const yearStart = format(startOfYear(new Date(selectedYear, 0)), "yyyy-MM-dd");
+  const yearEnd = format(endOfYear(new Date(selectedYear, 0)), "yyyy-MM-dd");
+
+  const { data: allFacturas = [] } = useQuery({
+    queryKey: ["facturas", selectedYear],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from("facturas")
         .select("*, clientes(razon_social)")
         .eq("user_id", user.id)
-        .gte("fecha_emision", start)
-        .lte("fecha_emision", end)
+        .gte("fecha_emision", yearStart)
+        .lte("fecha_emision", yearEnd)
         .order("fecha_emision", { ascending: true });
 
       if (error) throw error;
@@ -52,25 +55,33 @@ export default function FinanzasPage() {
     },
   });
 
-  const { data: ordenesCompra = [] } = useQuery({
-    queryKey: ["ordenes_compra", period, selectedMonth, selectedYear],
+  const { data: allOrdenesCompra = [] } = useQuery({
+    queryKey: ["ordenes_compra", selectedYear],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      const { start, end } = getDateRange();
       const { data, error } = await supabase
         .from("ordenes_compra")
         .select("*, proveedores(razon_social)")
         .eq("user_id", user.id)
-        .gte("fecha_orden", start)
-        .lte("fecha_orden", end)
+        .gte("fecha_orden", yearStart)
+        .lte("fecha_orden", yearEnd)
         .order("fecha_orden", { ascending: true });
 
       if (error) throw error;
       return data || [];
     },
   });
+
+  // Filter for KPIs based on selected period
+  const { start: kpiStart, end: kpiEnd } = getDateRange();
+  const facturas = allFacturas.filter((f) =>
+    f.fecha_emision >= kpiStart && f.fecha_emision <= kpiEnd
+  );
+  const ordenesCompra = allOrdenesCompra.filter((o) =>
+    o.fecha_orden >= kpiStart && o.fecha_orden <= kpiEnd
+  );
 
   // Cálculos financieros
   const ingresosTotales = facturas
@@ -92,20 +103,17 @@ export default function FinanzasPage() {
   const utilidadNeta = ingresosTotales - gastosTotales;
   const margenUtilidad = ingresosTotales > 0 ? ((utilidadNeta / ingresosTotales) * 100).toFixed(2) : "0.00";
 
-  // Datos para gráficos
-  const monthlyData = Array.from({ length: period === "month" ? 12 : 12 }, (_, i) => {
-    const monthDate = period === "month" 
-      ? new Date(selectedYear, i)
-      : new Date(selectedYear, i);
-    
+  // Datos para gráficos (siempre usa datos del año completo)
+  const monthlyData = Array.from({ length: 12 }, (_, i) => {
+    const monthDate = new Date(selectedYear, i);
     const monthStart = format(startOfMonth(monthDate), "yyyy-MM-dd");
     const monthEnd = format(endOfMonth(monthDate), "yyyy-MM-dd");
 
-    const ingresos = facturas
+    const ingresos = allFacturas
       .filter((f) => f.fecha_emision >= monthStart && f.fecha_emision <= monthEnd && f.estado === "Pagada")
       .reduce((sum, f) => sum + Number(f.total), 0);
 
-    const gastos = ordenesCompra
+    const gastos = allOrdenesCompra
       .filter((o) => o.fecha_orden >= monthStart && o.fecha_orden <= monthEnd && o.estado === "Aprobado")
       .reduce((sum, o) => sum + Number(o.total), 0);
 
