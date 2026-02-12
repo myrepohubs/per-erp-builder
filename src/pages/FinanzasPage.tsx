@@ -200,7 +200,7 @@ export default function FinanzasPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">S/. {ingresosTotales.toFixed(2)}</div>
+            <div className="text-2xl font-bold" style={{ color: '#df2020' }}>S/. {ingresosTotales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               +S/. {ingresosPendientes.toFixed(2)} pendientes
             </p>
