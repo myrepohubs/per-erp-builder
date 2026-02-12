@@ -315,8 +315,8 @@ export default function FinanzasPage() {
                     }} 
                   />
                   <Legend />
-                  <Bar dataKey="ingresos" fill="hsl(var(--chart-1))" name="Ingresos" />
-                  <Bar dataKey="gastos" fill="hsl(var(--chart-2))" name="Gastos" />
+                  <Bar dataKey="ingresos" fill="#066be0" name="Ingresos" />
+                  <Bar dataKey="gastos" fill="#df2020" name="Gastos" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
