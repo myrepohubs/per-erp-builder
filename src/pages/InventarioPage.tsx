@@ -434,12 +434,12 @@ export default function InventarioPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Inventario</h1>
-          <p className="text-muted-foreground">Gestión de productos y stock</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Inventario</h1>
+          <p className="text-muted-foreground text-sm">Gestión de productos y stock</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Dialog open={isCategoriaDialogOpen} onOpenChange={(open) => {
             setIsCategoriaDialogOpen(open);
             if (!open) {
@@ -679,17 +679,17 @@ export default function InventarioPage() {
               <CardTitle>Lista de Productos</CardTitle>
               <CardDescription>Gestiona tu catálogo de productos</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>SKU</TableHead>
                     <TableHead>Nombre</TableHead>
-                    <TableHead>Categoría</TableHead>
+                    <TableHead className="hidden md:table-cell">Categoría</TableHead>
                     <TableHead className="text-right">Stock</TableHead>
-                    <TableHead className="text-right">P. Compra</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">P. Compra</TableHead>
                     <TableHead className="text-right">P. Venta</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead className="hidden sm:table-cell">Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -698,7 +698,7 @@ export default function InventarioPage() {
                     <TableRow key={producto.id}>
                       <TableCell className="font-medium">{producto.sku}</TableCell>
                       <TableCell>{producto.nombre}</TableCell>
-                      <TableCell>{producto.categorias?.nombre || "-"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{producto.categorias?.nombre || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
                           {producto.stock_actual <= producto.stock_minimo && (
@@ -707,9 +707,9 @@ export default function InventarioPage() {
                           {producto.stock_actual.toFixed(2)} {producto.unidad_medida}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">S/ {producto.precio_compra.toFixed(2)}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">S/ {producto.precio_compra.toFixed(2)}</TableCell>
                       <TableCell className="text-right">S/ {producto.precio_venta.toFixed(2)}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Badge variant={producto.activo ? "default" : "secondary"}>
                           {producto.activo ? "Activo" : "Inactivo"}
                         </Badge>
@@ -756,7 +756,7 @@ export default function InventarioPage() {
               <CardTitle>Movimientos de Inventario</CardTitle>
               <CardDescription>Historial de entradas, salidas y ajustes</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -764,9 +764,9 @@ export default function InventarioPage() {
                     <TableHead>Producto</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">Stock Ant.</TableHead>
-                    <TableHead className="text-right">Stock Nuevo</TableHead>
-                    <TableHead>Referencia</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Stock Ant.</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Stock Nuevo</TableHead>
+                    <TableHead className="hidden md:table-cell">Referencia</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -793,9 +793,9 @@ export default function InventarioPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">{mov.cantidad.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{mov.stock_anterior.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{mov.stock_nuevo.toFixed(2)}</TableCell>
-                      <TableCell>{mov.referencia || "-"}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">{mov.stock_anterior.toFixed(2)}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">{mov.stock_nuevo.toFixed(2)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{mov.referencia || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -810,12 +810,12 @@ export default function InventarioPage() {
               <CardTitle>Categorías</CardTitle>
               <CardDescription>Organiza tus productos por categorías</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nombre</TableHead>
-                    <TableHead>Descripción</TableHead>
+                    <TableHead className="hidden sm:table-cell">Descripción</TableHead>
                     <TableHead className="text-right">Productos</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -826,7 +826,7 @@ export default function InventarioPage() {
                     return (
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">{cat.nombre}</TableCell>
-                        <TableCell>{cat.descripcion || "-"}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{cat.descripcion || "-"}</TableCell>
                         <TableCell className="text-right">{productosCount}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

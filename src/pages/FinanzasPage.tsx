@@ -148,14 +148,14 @@ export default function FinanzasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Finanzas</h1>
-          <p className="text-muted-foreground">Reportes y análisis contable</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Finanzas</h1>
+          <p className="text-muted-foreground text-sm">Reportes y análisis contable</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={period} onValueChange={(v) => setPeriod(v as "month" | "year")}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[130px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +165,7 @@ export default function FinanzasPage() {
           </Select>
           {period === "month" && (
             <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -178,7 +178,7 @@ export default function FinanzasPage() {
             </Select>
           )}
           <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -255,11 +255,11 @@ export default function FinanzasPage() {
 
       {/* Gráficos */}
       <Tabs defaultValue="trends" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="trends">Tendencias</TabsTrigger>
-          <TabsTrigger value="comparison">Comparación</TabsTrigger>
-          <TabsTrigger value="distribution">Distribución</TabsTrigger>
-          <TabsTrigger value="clients">Top Clientes</TabsTrigger>
+        <TabsList className="w-full sm:w-auto flex flex-wrap">
+          <TabsTrigger value="trends" className="flex-1 sm:flex-none text-xs sm:text-sm">Tendencias</TabsTrigger>
+          <TabsTrigger value="comparison" className="flex-1 sm:flex-none text-xs sm:text-sm">Comparación</TabsTrigger>
+          <TabsTrigger value="distribution" className="flex-1 sm:flex-none text-xs sm:text-sm">Distribución</TabsTrigger>
+          <TabsTrigger value="clients" className="flex-1 sm:flex-none text-xs sm:text-sm">Top Clientes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="trends" className="space-y-4">
