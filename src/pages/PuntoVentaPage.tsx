@@ -293,12 +293,12 @@ const PuntoVentaPage = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex gap-4 p-4">
+    <div className="h-[calc(100vh-4rem)] flex flex-col lg:flex-row gap-4 p-2 sm:p-4">
       {/* Products Section */}
-      <div className="flex-1 flex flex-col gap-4">
+      <div className="flex-1 flex flex-col gap-4 min-h-0">
         <Card className="flex-none">
-          <CardContent className="p-4">
-            <div className="flex gap-4">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -309,7 +309,7 @@ const PuntoVentaPage = () => {
                 />
               </div>
               <Select value={categoriaFiltro} onValueChange={setCategoriaFiltro}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
@@ -364,7 +364,7 @@ const PuntoVentaPage = () => {
       </div>
 
       {/* Cart Section */}
-      <Card className="w-[400px] flex flex-col">
+      <Card className="w-full lg:w-[400px] flex flex-col lg:max-h-full max-h-[50vh]">
         <CardHeader className="flex-none pb-2">
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />

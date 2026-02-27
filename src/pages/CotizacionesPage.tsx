@@ -325,8 +325,8 @@ export default function CotizacionesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground">Cotizaciones</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Cotizaciones</h1>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button>
@@ -512,13 +512,13 @@ export default function CotizacionesPage() {
         <CardHeader>
           <CardTitle>Lista de Cotizaciones</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Número</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Fecha Emisión</TableHead>
+                <TableHead className="hidden sm:table-cell">Fecha Emisión</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -541,7 +541,7 @@ export default function CotizacionesPage() {
                       </div>
                     </TableCell>
                     <TableCell>{cotizacion.clientes?.razon_social || "N/A"}</TableCell>
-                    <TableCell>{format(new Date(cotizacion.fecha_emision), "dd/MM/yyyy")}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{format(new Date(cotizacion.fecha_emision), "dd/MM/yyyy")}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoBadgeColor(cotizacion.estado)}`}>
                         {cotizacion.estado}

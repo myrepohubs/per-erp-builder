@@ -340,8 +340,8 @@ export default function FacturasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground">Facturas</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Facturas</h1>
         <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button>
@@ -554,16 +554,16 @@ export default function FacturasPage() {
         <CardHeader>
           <CardTitle>Lista de Facturas</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Número</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Fecha Emisión</TableHead>
+                <TableHead className="hidden sm:table-cell">Fecha Emisión</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
+                <TableHead className="text-right hidden sm:table-cell">Saldo</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -584,14 +584,14 @@ export default function FacturasPage() {
                       </div>
                     </TableCell>
                     <TableCell>{factura.clientes?.razon_social || "N/A"}</TableCell>
-                    <TableCell>{format(new Date(factura.fecha_emision), "dd/MM/yyyy")}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{format(new Date(factura.fecha_emision), "dd/MM/yyyy")}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoBadgeColor(factura.estado)}`}>
                         {factura.estado}
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-medium">S/ {factura.total.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right hidden sm:table-cell">
                       <span className={factura.total - factura.monto_pagado > 0 ? "text-destructive font-medium" : "text-muted-foreground"}>
                         S/ {(factura.total - factura.monto_pagado).toFixed(2)}
                       </span>

@@ -208,7 +208,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">
           Vista general de tu sistema de gestión empresarial
         </p>
@@ -343,10 +343,10 @@ export default function DashboardPage() {
 
       {/* Charts Section */}
       <Tabs defaultValue="ventas" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="ventas">Ventas vs Compras</TabsTrigger>
-          <TabsTrigger value="oportunidades">Embudo Oportunidades</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+        <TabsList className="w-full sm:w-auto flex flex-wrap">
+          <TabsTrigger value="ventas" className="flex-1 sm:flex-none text-xs sm:text-sm">Ventas vs Compras</TabsTrigger>
+          <TabsTrigger value="oportunidades" className="flex-1 sm:flex-none text-xs sm:text-sm">Embudo</TabsTrigger>
+          <TabsTrigger value="documentos" className="flex-1 sm:flex-none text-xs sm:text-sm">Documentos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ventas" className="space-y-4">
